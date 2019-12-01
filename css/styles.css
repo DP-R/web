@@ -1,3 +1,6 @@
+.profilePic{
+  margin-top:10px;
+}
 body{
   margin:0;
   font-family: 'Sulphur Point';
@@ -8,9 +11,11 @@ body{
   padding-top:59px;
   text-align: center;
   background-color: cyan;
-
-
 }
+.reminderd {
+  width:25%;
+}
+
 .botImage{
   position:relative;
   width:25%;
@@ -30,4 +35,7 @@ h2,h3{
   width:100%;
   height:auto;
 display:block;
+}
+.laptopImage{
+  width:25%;
 }
