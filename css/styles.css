@@ -1,6 +1,6 @@
 .profilePic{
   margin-top:10px;
-  width:25%;
+  width:10%;
 }
 body{
   margin:0;
@@ -14,17 +14,17 @@ body{
   background-color: cyan;
 }
 .reminderd {
-  width:25%;
+  width:10%;
 }
 
 .botImage{
   position:relative;
-  width:25%;
+  width:10%;
   left:25%;
 }
 .topImage{
   position:relative;
-  width:25%;
+  width:10%;
   right:25%;
 }
 h2,h3{
@@ -38,5 +38,5 @@ h2,h3{
 display:block;
 }
 .laptopImage{
-  width:25%;
+  width:10%;
 }
