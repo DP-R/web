@@ -1,0 +1,49 @@
+.profilePic{
+  margin-top:10px;
+  width:10%;
+}
+body{
+  margin:0;
+  font-family: 'Sulphur Point';
+  text-align:center;
+}
+.topDiv{
+  height:auto;
+  padding-top:59px;
+  text-align: center;
+  background-color: cyan;
+}
+.reminderd {
+  width:10%;
+}
+
+.botImage{
+  position:relative;
+  width:10%;
+  left:25%;
+}
+.topImage{
+  position:relative;
+  width:10%;
+  right:25%;
+}
+h2,h3{
+  font-family: 'Noto Serif', serif;
+}
+.mountainImage{
+  position:relative;
+  bottom:0;
+  width:50%%;
+  height:auto;
+display:block;
+}
+.laptopImage{
+  width:10%;
+}
+.clock{
+  
+}
+.footer-link{
+  position:absolute;
+  left:0%;
+}
