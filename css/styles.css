@@ -1,7 +1,7 @@
 .profilePic{
-  /* margin-top:10px; */
+  margin-top:10px;
   position:relative;
-  width:10%;
+  width:100px;
   max-width: 200px;
   /* text-align: center; */
   /* margin-left: 5%; */
@@ -10,9 +10,9 @@ body{
   margin:0;
   font-family: 'Sulphur Point';
   text-align:center;
-  font-size: xx-large;
-  background-color:#181A1B;
-  color: aliceblue;
+  /* font-size: xx-large; */
+  /* background-color:#181A1B; */
+  color: #2de00a;
 }
 .topDiv{
   
@@ -37,7 +37,7 @@ body{
   right:25%;
 }
 h2,h3{
-  font-family: 'Noto Serif', serif;
+  font-family: 'Comic Sans MS';
   text-align: center;
   
 }
