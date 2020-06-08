@@ -11,8 +11,8 @@ body{
   font-family: 'Sulphur Point';
   text-align:center;
   /* font-size: xx-large; */
-  /* background-color:#181A1B; */
-  color: #2de00a;
+  background-color:rgb(24,26,27);
+  color: skyblue;
 }
 .topDiv{
   
