@@ -84,11 +84,11 @@
 .inner_face::before {
     /* clock center circle small */
     content: "";
-    width: 18px; /* width of inner circle */
-    height: 18px; /* height of inner circle */
+    width: 10px; /* width of inner circle */
+    height: 10px; /* height of inner circle */
     border-radius: 18px;
-    margin-left: -9px; /* set this value of 1/2 width value*/
-    margin-top: -9px; /* set this value of 1/2 height value*/
+    margin-left: -5px; /* set this value of 1/2 width value*/
+    margin-top: -5px; /* set this value of 1/2 height value*/
     background: black;
     position: absolute;
     top: 50%;
@@ -108,7 +108,7 @@
 
 .hand, .hand.hour {
     position: absolute;
-    width: 4px; /* width of hour hand */
+    width: 3px; /* width of hour hand */
     height: 30%; /* height of hour hand */
     top: 20%; /* set top to 50% - height */
     left: 50%;
@@ -131,7 +131,7 @@
 .hand.minute {
     height: 45%; /* height of min hand */
     top: 5%; /* set top to 50% - height */
-    width: 5px; /* width of min hand */
+    width: 4px; /* width of min hand */
     margin-left: -2.5px; /* set this value to 1/2 width */
     }
 
