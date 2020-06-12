@@ -93,3 +93,7 @@ p{
   /* margin-left:20%; */
   /* margin-right:20%; */
 }
+.card-deck{
+  margin-right: 0px;
+  margin-left: 0px;
+}
