@@ -1,99 +1,94 @@
-.profilePic{
-  margin-top:10px;
+
+
+body {
   position:relative;
-  width:100px;
-  max-width: 200px;
-  /* text-align: center; */
-  /* margin-left: 5%; */
-}
-body{
-  margin:0;
+  margin: 0;
   font-family: 'Sulphur Point';
-  text-align:center;
-  /* font-size: xx-large; */
-  background-color:rgb(24,26,27);
+  text-align: center;
+  background-color: #121212;
   color: skyblue;
 }
-.topDiv{
-  
-  padding-top:59px;
+
+.topDiv {
+
+  padding-top: 59px;
   text-align: center;
   background-color: cyan;
-  color:black;
-  width:auto;
-}
-.reminderd {
-  width:10%;
+  color: black;
+  width: auto;
 }
 
-.botImage{
-  position:relative;
-  width:10%;
-  left:25%;
+
+.botImage {
+  position: relative;
+  width: 10%;
+  left: 25%;
 }
-.topImage{
-  position:relative;
-  width:10%;
-  right:25%;
+
+.topImage {
+  position: relative;
+  width: 10%;
+  right: 25%;
 }
-h2,h3{
+
+h2,
+h3 {
   font-family: 'Comic Sans MS';
   text-align: center;
-  
-}
-p{
-  text-align:center;
-}
-.mountainImage{
-  position:relative;
-  bottom:0;
-  width:50%;
-  height:auto;
-  display:block;
+
 }
 
-.footer-link{
-  position:absolute;
-  left:0%;
+p {
+  text-align: center;
 }
-.hr{
+
+.mountainImage {
+  position: relative;
+  bottom: 0;
+  width: 50%;
+  height: auto;
+  display: block;
+}
+
+
+.hr {
   background-color: white;
 }
-.profile{
-  /* text-align:center; */
-  /* position:relative; */
-  /* width:50%; */
-  margin-left:auto;
-  
-}
-.links{
-  position:absolute;
-  margin-left:25%;
+
+.links {
+  position: absolute;
+  margin-left: 25%;
 
 }
-.outerface{
-  width:50%;
-  position:relative;
-  /* margin-left:auto; */
+
+.outerface {
+  width: 50%;
+  position: relative;
 }
-.reminder{
-  /* text-align: unset; */
-  /* position:relative; */
-  width:20%;
-  max-width: 200px;
-  /* margin-left:30%; */
-  /* margin-right:30%; */
-  /* margin-right:20%; */
-}
-.project-management{
-  width:20%;
-  /* position:relative; */
-  max-width: 200px;
-  /* margin-left:10%; */
-  /* margin-left:20%; */
-  /* margin-right:20%; */
-}
-.card-deck{
+
+
+.card-deck {
   margin-right: 0px;
   margin-left: 0px;
+}
+
+#clock {
+  font-family: 'Courier New', monospace;
+  color: #66ff99;
+  font-size: 56px;
+  text-align: center;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+iframe {
+  height: var(--height);
+  width: 100%;
+  height: 100vh;
+}
+
+#if{
+  position:relative;
+  height:100vw;
+  display:block;
 }

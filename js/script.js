@@ -1,60 +1,29 @@
-var display = document.getElementById('timer');
-var secs = 0;
-var mins = 0;
-var hrs  = 0;
-var h = "";
-var m = "";
-var s = "";
-var timer;
-
-function countTimer(){
-	secs++;
-	
-	if(secs >= 60){
-		secs = 0;
-		mins++;
-		if(mins >= 60){
-			mins = 0;
-			hrs++;
-		}
+function currentTime() {
+	var date = new Date(); /* creating object of Date class */
+	var hour = date.getHours();
+	var min = date.getMinutes();
+	var sec = date.getSeconds();
+	var year = date.getFullYear();
+	var month = date.getMonth();
+	var day = date.toDateString();
+	var midday = "AM";
+	midday = (hour >= 12) ? "PM" : "AM"; /* assigning AM/PM */
+	hour = (hour == 0) ? 12 : ((hour > 12) ? (hour - 12): hour); /* assigning hour in 12-hour format */
+	hour = updateTime(hour);
+	min = updateTime(min);
+	sec = updateTime(sec);
+	document.getElementById("clock").innerText = hour + ":" + min + ":" + sec + " " + midday+" "+day; /* adding time to the div */
+	  var t = setTimeout(currentTime, 1000); /* setting timer */
+  }
+  
+  function updateTime(k) { /* appending 0 before time elements if less than 10 */
+	if (k < 10) {
+	  return "0" + k;
 	}
-	
-	h = hrs ? hrs > 9 ? hrs : "0" + hrs : "00";
-	m = mins ? mins > 9 ? mins : "0" + mins : "00";
-	s = secs > 9 ? secs : "0" + secs;
-	
-	display.innerHTML = h+":"+m+":"+s+"s";
-	
-	timerDuration();
-}
-
-function timerDuration(){
-	if(hrs != 99){
-		timer = setTimeout(countTimer, 100);
+	else {
+	  return k;
 	}
-	
-}
+  }
+  
+  currentTime();
 
-function startTimer(btn){
-	btn.setAttribute('disabled', 'disabled');
-	timerDuration();
-	
-}
-
-
-function stopTimer(){
-	document.getElementsByClassName('btn-success')[0].removeAttribute('disabled');
-	clearTimeout(timer);
-}
-
-function resetTimer(){
-	document.getElementsByClassName('btn-success')[0].removeAttribute('disabled');
-	clearTimeout(timer);
-	display.innerHTML = "00:00:00s";
-	secs = 0; 
-	mins = 0; 
-	hrs = 0;
-	h = "";
-	m = "";
-	s = "";
-}
