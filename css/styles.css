@@ -1,12 +1,14 @@
 .ab,
 .bc,
-.cd,
-.de,.ef {
+.cd,.de,.ef {
   /* scroll-snap-type: mandatory; */
   height: 100vh;
   scroll-snap-align: start;
 }
-
+.ef{
+  justify-content: center;
+  text-align: center;
+}
 html {
   scroll-snap-type: mandatory;
   scroll-snap-points-y: repeat(100vh);
