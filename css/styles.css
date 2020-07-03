@@ -46,16 +46,14 @@ body {
 
 .botImage {
   position: relative;
-  height:10%;
-  width:auto;
-  left: 25%;
+  width:15%;
+  left: 25vw;
 }
 
 .topImage {
   position: relative;
-  height: 10%;
-  width: auto;
-  right: 25%;
+  width: 15%;
+  right: 25vw;
 }
 
 h2,
@@ -98,5 +96,9 @@ p {
   .mountainImage{
     width:100%;
     left:0;
+  }
+  .botImage,.topImage{
+    width:50vw;
+    height:auto;
   }
 }
