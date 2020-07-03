@@ -46,13 +46,15 @@ body {
 
 .botImage {
   position: relative;
-  width: 15%;
+  height:10%;
+  width:auto;
   left: 25%;
 }
 
 .topImage {
   position: relative;
-  width: 15%;
+  height: 10%;
+  width: auto;
   right: 25%;
 }
 
