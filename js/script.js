@@ -12,7 +12,8 @@ function currentTime() {
 	hour = updateTime(hour);
 	min = updateTime(min);
 	sec = updateTime(sec);
-	document.getElementById("digiclock").innerText = hour + ":" + min + ":" + sec + " " + midday+" "+day; /* adding time to the div */
+	document.getElementById("digiclock").innerText = `${hour}:${min}:${sec} ${midday}`; /* adding time to the div */
+	document.getElementById("digical").innerText = `${day}`;
 	  var t = setTimeout(currentTime, 1000); /* setting timer */
   }
   
