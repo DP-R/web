@@ -26,4 +26,21 @@ function currentTime() {
   }
   
   currentTime();
-
+var i=1;
+var j=1;
+function myfun1(){
+	// window.open("");
+	i=i+1;
+	if(i ==5){
+		window.open("https://calendar.google.com/calendar/r");
+		i=1;
+	}
+}
+function myfun2(){
+	j=j+1;
+	if(j ==5){
+		window.open("https://docs.google.com/spreadsheets/d/1c1QwvQsgA6V_1HNO9VrLc6PD5knGzLkCogt2KvXNzt4/edit#gid=59662764");
+		j=1;
+	}
+	
+}
