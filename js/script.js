@@ -8,11 +8,12 @@ function currentTime() {
 	var day = date.toDateString();
 	var midday = "AM";
 	midday = (hour >= 12) ? "PM" : "AM"; /* assigning AM/PM */
-	hour = (hour == 0) ? 12 : ((hour > 12) ? (hour - 12): hour); /* assigning hour in 12-hour format */
+	hour = (hour == 0) ? 12 : ((hour > 12) ? (hour): hour); /* assigning hour in 12-hour format */
 	hour = updateTime(hour);
 	min = updateTime(min);
 	sec = updateTime(sec);
-	document.getElementById("digiclock").innerText = `${hour}:${min}:${sec} ${midday}`; /* adding time to the div */
+	document.getElementById("digiclock").innerHTML = `${hour}:${min}:${sec}`; /* adding time to the div */
+	// document.getElementById("digiclock").inner
 	document.getElementById("digical").innerText = `${day}`;
 	  var t = setTimeout(currentTime, 1000); /* setting timer */
   }
@@ -45,3 +46,5 @@ function myfun2(){
 	}
 	
 }
+
+document.getElementById("botImage").onclick=myfun2;
