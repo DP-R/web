@@ -92,6 +92,10 @@ p {
   height: 50vh;
 }
 
+.card-stack{
+  background-color: #edd1b0;
+  color:black;
+}
 @media screen and (max-width:600px){
   .mountainImage{
     width:100%;
