@@ -95,6 +95,8 @@ p {
 .card-stack{
   background-color: #edd1b0;
   color:black;
+  text-align: justify;
+  /* text-justify: inter-word; */
 }
 @media screen and (max-width:600px){
   .mountainImage{

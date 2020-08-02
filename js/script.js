@@ -1,3 +1,4 @@
+document.getElementById("botImage").onclick=myfun2;
 function currentTime() {
 	var date = new Date(); /* creating object of Date class */
 	var hour = date.getHours();
@@ -28,16 +29,8 @@ function currentTime() {
   }
   
   currentTime();
-var i=1;
 var j=1;
-function myfun1(){
-	// window.open("");
-	i=i+1;
-	if(i ==5){
-		window.open("https://calendar.google.com/calendar/r");
-		i=1;
-	}
-}
+
 function myfun2(){
 	j=j+1;
 	if(j ==5){
@@ -46,5 +39,3 @@ function myfun2(){
 	}
 	
 }
-
-document.getElementById("botImage").onclick=myfun2;
