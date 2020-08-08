@@ -15,7 +15,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>site</title>
+  <title> </title>
   <meta name="google-site-verification" content="uTVYpG2JuTL8aCCPGdQy4V6X-xWKUhMH5A2Sr_-s4Xk" />
   <link href="https://fonts.googleapis.com/css?family=Sulphur+Point&display=swap" rel="stylesheet">
 </head>
@@ -32,7 +32,7 @@
 
       <div class="w3-bar w3-border-bottom">
         <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'excel')">excel</button>
-        <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'Paris')">Paris</button>
+        <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'word')">word</button>
         <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'Tokyo')">Tokyo</button>
       </div>
 
@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <div id="Paris" class="w3-container city">
+      <div id="word" class="w3-container city">
         <div class="ppt">
           <iframe
             src="https://docs.google.com/document/d/e/2PACX-1vSOLbfUU-9HK3hZ60tnQcNnKbyOVSPAMnSN7dmmtnY91uKzDU84OBIfvDnGJVjtXeChDfXYMWggVgrk/pub?embedded=true"></iframe>
@@ -82,33 +82,24 @@
   <div class="w3-sidebar w3-bar-block" style="display:none" id="mySidebar">
     <button onclick="w3_close()" class="w3-bar-item w3-button w3-large">Close &times;</button>
 
-    <button onclick="document.getElementById('id01').style.display='block'" class="w3-button w3-black">Open Tabbed
-      Modal</button>
+    <button onclick="document.getElementById('id01').style.display='block'" class="w3-bar-item w3-button w3-black">frame
+      </button>
 
-    <button class="w3-button w3-block w3-left-align" onclick="myAccFunc('personalAcc')">
+      <a href="#" class="w3-bar-item w3-button">excel</a>
+
+      <button class="w3-button w3-block w3-left-align" onclick="myAccFunc('demoAcc')">
       Personal <i class="fa fa-caret-down"></i>
     </button>
-
-    <div id="personalAcc" class="w3-hide w3-white w3-card">
-      <a href="#" class="w3-bar-item w3-button">Who Am I?</a>
-      <a href="#" class="w3-bar-item w3-button">Vision</a>
-      <a href="#" class="w3-bar-item w3-button">Self</a>
-      <a href="#" class="w3-bar-item w3-button">Future</a>
-    </div>
-
-    <a href="#" class="w3-bar-item w3-button">excel</a>
-
     <div id="demoAcc" class="w3-hide w3-white w3-card">
       <a href="#" class="w3-bar-item w3-button">Link</a>
       <a href="#" class="w3-bar-item w3-button">Link</a>
     </div>
 
     <a href="#" class="w3-bar-item w3-button">link 2</a>
-    <a href="#" class="w3-bar-item w3-button">Link 3</a>
   </div>
   <script>
     function w3_open() {
-      document.getElementById("mySidebar").style.width = "100%";
+      // document.getElementById("mySidebar").style.width = "100%";
       document.getElementById("mySidebar").style.display = "block";
     }
 
