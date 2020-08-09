@@ -27,13 +27,13 @@
       <header class="w3-container w3-blue">
         <span onclick="document.getElementById('id01').style.display='none'"
           class="w3-button w3-blue w3-xlarge w3-display-topright">&times;</span>
-        <h2>Header</h2>
+        <h3>IFRAME</h3>
       </header>
 
       <div class="w3-bar w3-border-bottom">
         <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'excel')">excel</button>
         <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'word')">word</button>
-        <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'Tokyo')">Tokyo</button>
+        <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'ppt')">ppt</button>
       </div>
 
       <div id="excel" class="w3-container city">
@@ -45,13 +45,18 @@
 
       <div id="word" class="w3-container city">
         <div class="ppt">
-          <iframe
-            src="https://docs.google.com/document/d/e/2PACX-1vSOLbfUU-9HK3hZ60tnQcNnKbyOVSPAMnSN7dmmtnY91uKzDU84OBIfvDnGJVjtXeChDfXYMWggVgrk/pub?embedded=true"></iframe>
+        <iframe
+          src="https://docs.google.com/document/d/e/2PACX-1vRwPd9NfoJ9vcpukj-avElt4m8mVJ2z5hJMtr06b0dBkOnokwzPIv8_XLYzjJUUPzwY3Lzq2imZNR4R/pub?embedded=true"></iframe>
         </div>
       </div>
 
-      <div id="Tokyo" class="w3-container city">
-
+      <div id="ppt" class="w3-container city">
+        <div class="ppt">
+<iframe
+  src="https://docs.google.com/presentation/d/e/2PACX-1vSqfYPemut7OMkFShdqQ3BqhjAiT7p50j-j-tDHgm0X0hxSnClxuRq0Xbi4cRaZtNiXw4pa_UIlux9G/embed?start=true&loop=true&delayms=3000"
+  frameborder="0" allowfullscreen="true" mozallowfullscreen="true"
+  webkitallowfullscreen="true"></iframe>
+  </div>
       </div>
 
       <div class="w3-container w3-light-grey w3-padding">
@@ -80,22 +85,21 @@
   </script>
 
   <div class="w3-sidebar w3-bar-block" style="display:none" id="mySidebar">
-    <button onclick="w3_close()" class="w3-bar-item w3-button w3-large">Close &times;</button>
+    <button onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-red">Close &times;</button>
 
     <button onclick="document.getElementById('id01').style.display='block'" class="w3-bar-item w3-button w3-black">frame
       </button>
 
-      <a href="#" class="w3-bar-item w3-button">excel</a>
-
       <button class="w3-button w3-block w3-left-align" onclick="myAccFunc('demoAcc')">
-      Personal <i class="fa fa-caret-down"></i>
+      Logic <i class="fa fa-caret-down"></i>
     </button>
     <div id="demoAcc" class="w3-hide w3-white w3-card">
-      <a href="#" class="w3-bar-item w3-button">Link</a>
-      <a href="#" class="w3-bar-item w3-button">Link</a>
+      <a href="https://www.braingle.com/" class="w3-bar-item w3-button">Braingle</a>
+      <a href="https://www.gutenberg.org/files/52598/52598-h/52598-h.htm#ARITHMETICAL"
+        class="w3-bar-item w3-button">Conundrum</a>
     </div>
 
-    <a href="#" class="w3-bar-item w3-button">link 2</a>
+    <a href="http://www.feynman.com/" class="w3-bar-item w3-button">Feynman</a>
   </div>
   <script>
     function w3_open() {
