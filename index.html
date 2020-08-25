@@ -24,33 +24,33 @@
 
   <div id="id01" class="w3-modal">
     <div class="w3-modal-content w3-card-4 w3-animate-zoom">
-      <header class="w3-container w3-blue">
+      <header class="w3-container w3-gray">
         <span onclick="document.getElementById('id01').style.display='none'"
-          class="w3-button w3-blue w3-xlarge w3-display-topright">&times;</span>
-        <h3>IFRAME</h3>
+          class="w3-button w3-gray w3-xlarge w3-display-topright">&times;</span>
+        <h3>iframe</h3>
       </header>
 
-      <div class="w3-bar w3-border-bottom">
+      <div class="w3-bar w3-black">
         <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'excel')">excel</button>
         <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'word')">word</button>
         <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'ppt')">ppt</button>
       </div>
 
-      <div id="excel" class="w3-container city">
+      <div id="excel" class="w3-container w3-black city">
         <div class="ppt">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQbFzquFuhk1LecpwhWmsSGoOw1HuLS9q_kjqrdRMB1-CSuQWCsKcPa016YLJm_hGNgty9Uh1OV-i_s/pubhtml?widget=true&amp;headers=false"></iframe>
         </div>
       </div>
 
-      <div id="word" class="w3-container city">
+      <div id="word" class="w3-container w3-black city">
         <div class="ppt">
         <iframe
           src="https://docs.google.com/document/d/e/2PACX-1vRwPd9NfoJ9vcpukj-avElt4m8mVJ2z5hJMtr06b0dBkOnokwzPIv8_XLYzjJUUPzwY3Lzq2imZNR4R/pub?embedded=true"></iframe>
         </div>
       </div>
 
-      <div id="ppt" class="w3-container city">
+      <div id="ppt" class="w3-container w3-black city">
         <div class="ppt">
 <iframe
   src="https://docs.google.com/presentation/d/e/2PACX-1vSqfYPemut7OMkFShdqQ3BqhjAiT7p50j-j-tDHgm0X0hxSnClxuRq0Xbi4cRaZtNiXw4pa_UIlux9G/embed?start=true&loop=true&delayms=3000"
@@ -59,8 +59,8 @@
   </div>
       </div>
 
-      <div class="w3-container w3-light-grey w3-padding">
-        <button class="w3-button w3-right w3-white w3-border"
+      <div class="w3-container w3-black ">
+        <button class="w3-button w3-right w3-black"
           onclick="document.getElementById('id01').style.display='none'">Close</button>
       </div>
 
@@ -84,10 +84,10 @@
     }
   </script>
 
-  <div class="w3-sidebar w3-bar-block" style="display:none" id="mySidebar">
-    <button onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-red">Close &times;</button>
+  <div class="w3-sidebar w3-bar-block w3-black" style="display:none" id="mySidebar">
+    <button onclick="w3_close()" class="w3-bar-item w3-button w3-large">Close &times;</button>
 
-    <button onclick="document.getElementById('id01').style.display='block'" class="w3-bar-item w3-button w3-black">frame
+    <button onclick="document.getElementById('id01').style.display='block'" class="w3-bar-item w3-button">frame
       </button>
 
       <button class="w3-button w3-block w3-left-align" onclick="myAccFunc('demoAcc')">
