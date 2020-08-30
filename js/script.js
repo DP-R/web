@@ -8,16 +8,18 @@ function currentTime() {
 	var year = date.getFullYear();
 	var month = date.getMonth();
 	var day = date.toDateString();
+	var milli = date.getMilliseconds();
 	var midday = "AM";
 	midday = (hour >= 12) ? "PM" : "AM"; /* assigning AM/PM */
 	hour = (hour == 0) ? 12 : ((hour > 12) ? (hour) : hour); /* assigning hour in 12-hour format */
 	hour = updateTime(hour);
 	min = updateTime(min);
 	sec = updateTime(sec);
-	document.getElementById("digiclock").innerHTML = `${hour}:${min}:${sec}`; /* adding time to the div */
+	milsec=(hour*3600+min*60+sec);
+	document.getElementById("digiclock").innerHTML = `${hour}:${min}<div id="millisec">${sec}</div>`; /* adding time to the div */
 	// document.getElementById("digiclock").inner
 	document.getElementById("digical").innerText = `${day}`;
-	var t = setTimeout(currentTime, 1000); /* setting timer */
+	var t = setTimeout(currentTime, 1); /* setting timer */
 }
 
 function updateTime(k) {
@@ -40,3 +42,17 @@ function myfun2() {
 		j = 1;
 	}
 }
+
+var modal = document.getElementById("id01");
+var sidebar = document.getElementById("mySidebar");
+window.onclick = function (event) {
+	if (event.target == modal) {
+		modal.style.display = "none";
+		sidebar.style.display="none";
+	}
+}
+// window.onclick = function (event){
+// 	if (event.target == sidebar){
+// 		sidebar.style.display="none";
+// 	}
+// }
