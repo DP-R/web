@@ -51,8 +51,15 @@ window.onclick = function (event) {
 		sidebar.style.display="none";
 	}
 }
-// window.onclick = function (event){
-// 	if (event.target == sidebar){
-// 		sidebar.style.display="none";
-// 	}
-// }
+
+var i = 0;
+var txt = "I'm Purnendra"; /* The text */
+var speed = 50; /* The speed/duration of the effect in milliseconds */
+function typeWriter() {
+	if (i < txt.length) {
+		document.getElementById("demo").innerHTML += txt.charAt(i);
+		i++;
+		setTimeout(typeWriter, speed);
+	}
+}
+typeWriter();
