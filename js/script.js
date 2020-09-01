@@ -50,6 +50,7 @@ window.onclick = function (event) {
 		modal.style.display = "none";
 		sidebar.style.display="none";
 	}
+	openFullscreen();
 }
 
 var i = 0;
@@ -63,3 +64,17 @@ function typeWriter() {
 	}
 }
 typeWriter();
+
+
+var elem = document.documentElement;
+function openFullscreen() {
+	if (elem.requestFullscreen) {
+		elem.requestFullscreen();
+	} else if (elem.mozRequestFullScreen) { /* Firefox */
+		elem.mozRequestFullScreen();
+	} else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+		elem.webkitRequestFullscreen();
+	} else if (elem.msRequestFullscreen) { /* IE/Edge */
+		elem.msRequestFullscreen();
+	}
+}
