@@ -49,8 +49,8 @@ window.onclick = function (event) {
 	if (event.target == modal) {
 		modal.style.display = "none";
 		break;
+		sidebar.style.display="none";
 	}
-	sidebar.style.display="none";
 	// openFullscreen();
 }
 
