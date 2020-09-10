@@ -144,9 +144,9 @@
 }
 
 .hand.minute {
-    height: 45%;
+    height: 50%;
     /* height of min hand */
-    top: 5%;
+    top: 0%;
     /* set top to 50% - height */
     width: 4px;
     /* width of min hand */
@@ -162,5 +162,5 @@
     margin-left: -1px;
     /* set this value to 1/2 width */
     top: 0;
-    background: red
+    background: red;
 }
