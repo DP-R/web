@@ -6,12 +6,16 @@
 }
 
 .ppt{
-  height:50vh;
+  height:80vh;
   text-align: center;
 }
 
+.w3-modal,#id-01{
+  padding-top:0 !important;
+}
+
 iframe{
-  height:50vh;
+  height:80vh;
   width: 100%;
   text-align:center;
 }
