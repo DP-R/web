@@ -1,8 +1,14 @@
 .intro,
-.clockscreen {
+.clockscreen,.right1 {
   height: 100vh;
+  width:100vw;
   scroll-snap-align: start;
   text-align: center;
+  box-sizing: border-box;
+}
+.right1{
+margin-top:-100vh;
+margin-left:100vw;
 }
 
 .ppt{

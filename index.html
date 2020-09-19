@@ -11,7 +11,6 @@
   </script>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/css3clock.css">
-  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -22,6 +21,16 @@
 
 <body>
 
+
+  <div class="intro">
+    <img class="topImage" src="images/cloud.png" alt="cloudImage" onclick="w3_open()">
+    <h1 style="color:white;" id="demo"></h1>
+    <h3 style="color:white;">IIT Madras </h3>
+    <img class="botImage" id="botImage" src="images/cloud.png" alt="cloudImage">
+    <img class="mountainImage" src="images/mountain.png" alt="mountainImage" onclick="myfun2()">
+  </div>
+
+<div class="right1">
   <div id="id01" class="w3-modal">
     <div class="w3-modal-content w3-card-4 w3-animate-zoom">
 
@@ -41,32 +50,30 @@
 
       <div id="word" class="w3-container w3-black city">
         <div class="ppt">
-        <iframe
-          src="https://docs.google.com/document/d/e/2PACX-1vRwPd9NfoJ9vcpukj-avElt4m8mVJ2z5hJMtr06b0dBkOnokwzPIv8_XLYzjJUUPzwY3Lzq2imZNR4R/pub?embedded=true"></iframe>
+          <iframe
+            src="https://docs.google.com/document/d/e/2PACX-1vRwPd9NfoJ9vcpukj-avElt4m8mVJ2z5hJMtr06b0dBkOnokwzPIv8_XLYzjJUUPzwY3Lzq2imZNR4R/pub?embedded=true"></iframe>
         </div>
       </div>
 
       <div id="ppt" class="w3-container w3-black city">
         <div class="ppt">
-<iframe
-  src="https://docs.google.com/presentation/d/e/2PACX-1vSqfYPemut7OMkFShdqQ3BqhjAiT7p50j-j-tDHgm0X0hxSnClxuRq0Xbi4cRaZtNiXw4pa_UIlux9G/embed?start=true&loop=true&delayms=3000"
-  frameborder="0" allowfullscreen="true" mozallowfullscreen="true"
-  webkitallowfullscreen="true"></iframe>
-  </div>
+          <iframe
+            src="https://docs.google.com/presentation/d/e/2PACX-1vSqfYPemut7OMkFShdqQ3BqhjAiT7p50j-j-tDHgm0X0hxSnClxuRq0Xbi4cRaZtNiXw4pa_UIlux9G/embed?start=true&loop=true&delayms=3000"
+            frameborder="0" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+        </div>
       </div>
 
-     <div id="ima" class="w3-container w3-black city">
-       <div class="ima">
-      <img src="images/time table.png" style='width:100%;'> 
+      <div id="ima" class="w3-container w3-black city">
+        <div class="ima">
+          <img src="images/time table.png" style='width:100%;'>
+        </div>
       </div>
-     </div>
- 
+
       <div class="w3-container w3-black ">
         <button class="w3-button w3-right w3-black"
           onclick="document.getElementById('id01').style.display='none'">Close</button>
-        <button class="w3-button w3-right w3-black"
-          onclick="refresh()">Refresh</button>
-        </div>
+        <button class="w3-button w3-right w3-black" onclick="refresh()">Refresh</button>
+      </div>
 
     </div>
   </div>
@@ -92,9 +99,9 @@
     <button onclick="w3_close()" class="w3-bar-item w3-button w3-large">Close &times;</button>
 
     <button onclick="document.getElementById('id01').style.display='block'" class="w3-bar-item w3-button">frame
-      </button>
+    </button>
 
-      <button class="w3-button w3-block w3-left-align" onclick="myAccFunc('demoAcc')">
+    <button class="w3-button w3-block w3-left-align" onclick="myAccFunc('demoAcc')">
       Logic <i class="fa fa-caret-down"></i>
     </button>
     <div id="demoAcc" class="w3-hide w3-white w3-card">
@@ -108,10 +115,9 @@
   <script>
     function w3_open() {
       // document.getElementById("mySidebar").style.width = "100%";
-      if (document.getElementById("mySidebar").style.display == "block"){
+      if (document.getElementById("mySidebar").style.display == "block") {
         document.getElementById("mySidebar").style.display = "none";
-      }
-      else{
+      } else {
         document.getElementById("mySidebar").style.display = "block";
       }
     }
@@ -119,10 +125,12 @@
     function w3_close() {
       document.getElementById("mySidebar").style.display = "none";
     }
-    function refresh(){
-       fra=document.getElementById("exc");
-       fra.src +='';
+
+    function refresh() {
+      fra = document.getElementById("exc");
+      fra.src += '';
     }
+
     function myAccFunc(hello) {
       var x = document.getElementById(hello);
       if (x.className.indexOf("w3-show") == -1) {
@@ -136,13 +144,7 @@
     }
   </script>
 
-  <div class="intro">
-    <img class="topImage" src="images/cloud.png" alt="cloudImage" onclick="w3_open()">
-    <h1 style="color:white;" id="demo"></h1>
-    <h3 style="color:white;">IIT Madras </h3>
-    <img class="botImage" id="botImage" src="images/cloud.png" alt="cloudImage">
-    <img class="mountainImage" src="images/mountain.png" alt="mountainImage" onclick="myfun2()">
-  </div>
+</div>
 
   <div class="clockscreen">
     <div id="digiclock"></div>
