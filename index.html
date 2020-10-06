@@ -16,7 +16,6 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>^</title>
   <meta name="google-site-verification" content="uTVYpG2JuTL8aCCPGdQy4V6X-xWKUhMH5A2Sr_-s4Xk" />
-  <link href="https://fonts.googleapis.com/css?family=Sulphur+Point&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -98,7 +97,7 @@
   <div class="w3-sidebar w3-bar-block w3-black" style="display:none" id="mySidebar">
     <button onclick="w3_close()" class="w3-bar-item w3-button w3-large">Close &times;</button>
 
-    <button onclick="document.getElementById('id01').style.display='block'" class="w3-bar-item w3-button">frame
+    <button onclick="id_open()" class="w3-bar-item w3-button">frame
     </button>
 
     <button class="w3-button w3-block w3-left-align" onclick="myAccFunc('demoAcc')">
@@ -121,6 +120,16 @@
         document.getElementById("mySidebar").style.display = "block";
       }
     }
+
+    function id_open() {
+      // document.getElementById("mySidebar").style.width = "100%";
+      if (document.getElementById("id01").style.display == "block") {
+        document.getElementById("id01").style.display = "none";
+      } else {
+        document.getElementById("id01").style.display = "block";
+      }
+    }
+
 
     function w3_close() {
       document.getElementById("mySidebar").style.display = "none";

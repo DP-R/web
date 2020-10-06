@@ -1,3 +1,7 @@
+#id01{
+  display:none;
+}
+
 .intro,
 .clockscreen,.right1 {
   height: 100vh;
