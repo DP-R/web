@@ -26,7 +26,8 @@ margin-left:100vw;
 
 iframe{
   height:80vh;
-  width: 100%;
+  width: 100vw;
+  margin: 0;
   text-align:center;
 }
 
@@ -134,4 +135,9 @@ h3 {
   #digiclock {
     font-size: 47px;
   }
+}
+
+button,a{
+  width:20vw;
+  height:10vh;
 }
