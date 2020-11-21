@@ -16,7 +16,7 @@ margin-left:100vw;
 }
 
 .ppt{
-  height:80vh;
+  height:90vh;
   text-align: center;
 }
 
@@ -29,6 +29,7 @@ iframe{
   width: 100vw;
   margin: 0;
   text-align:center;
+  border-width: 0;
 }
 
 /* html {
