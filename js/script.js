@@ -19,7 +19,7 @@ function currentTime() {
 	document.getElementById("digiclock").innerHTML = `${hour}:${min}<div id="millisec">${sec}</div>`; /* adding time to the div */
 	// document.getElementById("digiclock").inner
 	document.getElementById("digical").innerText = `${day}`;
-	var t = setTimeout(currentTime, 1000); /* setting timer */
+	var t = setTimeout(currentTime, 1); /* setting timer */
 }
 
 function updateTime(k) {
