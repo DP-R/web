@@ -31,6 +31,7 @@ iframe{
   margin: 0;
   text-align:center;
   border-width: 0;
+  overflow:visible;
 }
 
 /* html {
@@ -41,7 +42,7 @@ iframe{
 
 
 body {
-  scroll-snap-type: mandatory;
+  /* scroll-snap-type: mandatory; */
   position: relative;
   margin: 0;
   background-color: #121212;
