@@ -2,14 +2,21 @@
 <html>
 <body>
 
-<h2>Redirect to a Webpage</h2>
-<p>The replace() method replaces the current document with a new one:</p>
-
-<button onclick="myFunction()">Replace document</button>
-
+<button onclick="lib_drive()">lib_drive</button>
+<img src="timetable.png">
+<button onclick="sheets()">sheets</button>
+<button onclick="docs()">docs</button>
+  
 <script>
-function myFunction() {
+function lib_drive() {
   location.replace("https://drive.google.com/drive/folders/10FNjpzE1YbozESpbRoW8V3KlTNUkyiBJ")
+}
+
+  function sheets() {
+  location.replace("https://docs.google.com/spreadsheets/d/1V08WOS__2YvUXNyZuh3QTLnCNrUTDS6AhzGGvodEFC0/edit?usp=sharing")
+}
+  function docs() {
+  location.replace("https://docs.google.com/document/d/13esZnPOUoU8DLZKzSLmVAOPVwB6wOnVuXstWMDgNmKs/edit?usp=sharing")
 }
 </script>
 
