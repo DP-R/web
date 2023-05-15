@@ -1,16 +1,39 @@
 <!DOCTYPE html>
 <html>
+<head>
+<style>
+.btn-group .button {
+  background-color: #4CAF50; /* Green */
+  border: 1px solid green;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+  cursor: pointer;
+  width: 150px;
+  display: block;
+}
+
+.btn-group .button:not(:last-child) {
+  border-bottom: none; /* Prevent double borders */
+}
+
+.btn-group .button:hover {
+  background-color: #3e8e41;
+}
+</style>
+</head>
 <body>
 
-<div>
-<button onclick="lib_drive()">drive</button>
-  <button onclick="temp_drive()">temp</button>
-<button onclick="docs()">doc</button>
-  <button onclick="docEmbed()">embed_doc</button>
-<button onclick="memory()">sheet</button>
-</div>
-  
 
+<div>
+  <button class="button" onclick="lib_drive()">drive</button>
+  <button class="button" onclick="temp_drive()">temp</button>
+  <button class="button" onclick="docs()">doc</button>
+  <button class="button" onclick="docEmbed()">embed_doc</button>
+  <button class="button" onclick="memory()">sheet</button>
+</div>
 
 <script>
 function lib_drive() {
@@ -32,6 +55,7 @@ function temp_drive() {
     location.replace("https://docs.google.com/document/d/e/2PACX-1vQfyoPQQBH2LdY3CWh-G_8agFislzLtAgfPr1XmzACok6Eaw0vf1aezQ00xEiGywTGFzGNnxZh91typ/pub")
   }
 </script>
-
 </body>
-</html> 
+</html>
+
+
