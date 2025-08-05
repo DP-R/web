@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+.btn-group .button {
+  background-color: #008CBA; /* Green */
+  border: 1px solid green;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 30px;
+  cursor: pointer;
+  width: 100%;
+  display: block;
+}
+
+.btn-group .button:not(:last-child) {
+  border-bottom: none; /* Prevent double borders */
+}
+
+.btn-group .button:hover {
+  background-color: #555555;
+}
+</style>
+</head>
+<body>
+
+
+<div class="btn-group">
+  <button class="button" onclick="lib_drive()">Rules for Chess</button>
+  <button class="button" onclick="temp_drive()">Rules for Carroms</button>
+  <button class="button" onclick="docs()">Rules for Table Tennis</button>
+  <button class="button" onclick="docEmbed()">Scoreboard</button>
+  <!-- <button class="button" onclick="memory()">sheet</button> -->
+</div>
+
+<script>
+function lib_drive() {
+  location.replace("https://docs.google.com/document/d/1dGSRq70Z7ro26EzA3EEWZliA6s8aSwM1aDsZXvbr8MM/edit?usp=sharing")
+}
+function temp_drive() {
+ location.replace("https://docs.google.com/document/d/1aXeMmum7bttIPqRDLWGkco4M5h2a0SrFvGqxEz3epIs/edit?usp=sharing") 
+}
+  // function sheets() {
+  // location.replace("https://docs.google.com/spreadsheets/d/1b_P0KVHt8Sm9YK_QJmtbAzMq6joYRLUXxS5HaeVi1DY/edit?usp=sharing")
+// }
+  function docs() {
+  location.replace("https://docs.google.com/document/d/1Xb7N_oXQhsR9axEa4VIaZufpTaXimGMuWAGn_4OyN9o/edit?usp=sharing")
+}
+   // function memory(){
+     // location.replace("https://docs.google.com/spreadsheets/d/1RnFIBKrLHOkotO6_RTWqY6Fy97OmZ63m_w-7wT6j664/edit?usp=sharing")
+// }
+  function docEmbed(){
+    location.replace("https://docs.google.com/spreadsheets/d/1DvizAqEHL0B7wPn9ZgblxPzTdPrWOY6D8yKFaNbskms/edit?usp=sharing")
+  }
+</script>
+</body>
+</html>
