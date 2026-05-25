@@ -1,0 +1,84 @@
+/* Base Styles */
+#access-body {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #000;
+  color: #0f0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  transition: background-color 0.5s ease;
+}
+
+/* Login Screen (Hacker Vibe) */
+#login-container {
+  text-align: center;
+  border: 1px solid #0f0;
+  padding: 40px;
+  box-shadow: 0 0 15px #0f0;
+  background-color: rgba(0, 10, 0, 0.9);
+}
+
+#login-container h2 {
+  margin-top: 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+#password-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #0f0;
+  color: #0f0;
+  font-size: 18px;
+  padding: 10px;
+  text-align: center;
+  outline: none;
+  font-family: 'Courier New', Courier, monospace;
+  width: 250px;
+}
+
+#password-input::placeholder {
+  color: #0f0;
+  opacity: 0.5;
+}
+
+#error-msg {
+  color: #f00;
+  margin-top: 15px;
+  visibility: hidden;
+  font-weight: bold;
+}
+
+/* Main Content */
+#main-content {
+  display: none;
+  width: 100%;
+  max-width: 500px;
+}
+
+.btn-group .button {
+  background-color: #008CBA;
+  border: 1px solid #005f7e;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 24px;
+  cursor: pointer;
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+  transition: background-color 0.3s;
+  font-family: Arial, sans-serif;
+}
+
+.btn-group .button:not(:last-child) {
+  border-bottom: none;
+}
+
+.btn-group .button:hover {
+  background-color: #555555;
+}

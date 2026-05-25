@@ -1,63 +1,63 @@
-
-
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<style>
-.btn-group .button {
-  background-color: #008CBA; /* Green */
-  border: 1px solid green;
-  color: white;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  font-size: 30px;
-  cursor: pointer;
-  width: 100%;
-  display: block;
-}
-
-.btn-group .button:not(:last-child) {
-  border-bottom: none; /* Prevent double borders */
-}
-
-.btn-group .button:hover {
-  background-color: #555555;
-}
-</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Access Portal</title>
+<link rel="stylesheet" href="css/login.css">
 </head>
-<body>
+<body id="access-body">
 
+<!-- Authentication Screen -->
+<div id="login-container">
+  <h2>System Authentication</h2>
+  <p>Please enter your access key:</p>
+  <input type="password" id="password-input" placeholder="[ _ ]" autofocus onkeypress="handleAuth(event)">
+  <div id="error-msg">ERROR: ACCESS DENIED</div>
+</div>
 
-<div class="btn-group">
-  <button class="button" onclick="button_1()">sheet</button>
-  <button class="button" onclick="button_2()">doc</button>
-  <button class="button" onclick="button_3()">drive</button>
-  <button class="button" onclick="button_4()">dropbox</button>
-  <button class="button" onclick="button_5()">drive upload</button>
+<!-- Main Links -->
+<div id="main-content" class="btn-group">
+  <button class="button" onclick="navigate('1')">Sheet</button>
+  <button class="button" onclick="navigate('2')">Doc</button>
+  <button class="button" onclick="navigate('3')">Drive</button>
+  <button class="button" onclick="navigate('4')">Dropbox</button>
+  <button class="button" onclick="navigate('5')">Drive Upload</button>
 </div>
 
 <script>
-function button_1() {
-  location.replace("https://docs.google.com/spreadsheets/d/1piGYWlsdXF8cMDFxWI3h-T72vF-ef_hq-DL9HCxyLmA/edit?usp=sharing")
-}
-function button_2() {
- location.replace("https://docs.google.com/document/d/1TNPklc4dCepMDeZocgGyHjojDBBkv9rQIwmS5bJ_DpE/edit?usp=sharing") 
-}
-  function button_3() {
-  location.replace("https://drive.google.com/drive/folders/1WWHuy0bAdfNVrwMIIThRpZVAIBNpe0m8?usp=sharing")
-}
-  function button_4() {
-  location.replace("https://www.dropbox.com/scl/fo/ze4hj5xfsj6npvfidbhdp/AA7GA3iVX3FzqtpMJkqqFRM?rlkey=7qs1bz4fy1a5d4fnt7iypy1t6&st=yro08aw0&dl=0")
-}
-   function button_5(){
-     location.replace("https://script.google.com/macros/s/AKfycbyIJ72PC7zptGjNM-iXVcxIgTw-HkutoJy06k0CmVOt7TUH7oEnD4Bzw5vrfTx7zo0F/exec")
-}
-  function docEmbed(){
-    location.replace("https://docs.google.com/document/d/e/2PACX-1vQfyoPQQBH2LdY3CWh-G_8agFislzLtAgfPr1XmzACok6Eaw0vf1aezQ00xEiGywTGFzGNnxZh91typ/pub")
+function handleAuth(event) {
+  if (event.key === 'Enter') {
+    var password = document.getElementById('password-input').value;
+    if (password === " ") {
+      document.getElementById('login-container').style.display = 'none';
+      document.getElementById('main-content').style.display = 'block';
+    } else {
+      document.getElementById('error-msg').style.visibility = 'visible';
+    }
   }
+}
+
+function navigate(dest) {
+  switch (dest) {
+    case '1':
+      location.replace("https://docs.google.com/spreadsheets/d/1piGYWlsdXF8cMDFxWI3h-T72vF-ef_hq-DL9HCxyLmA/edit?usp=sharing");
+      break;
+    case '2':
+      location.replace("https://docs.google.com/document/d/1TNPklc4dCepMDeZocgGyHjojDBBkv9rQIwmS5bJ_DpE/edit?usp=sharing");
+      break;
+    case '3':
+      location.replace("https://drive.google.com/drive/folders/1WWHuy0bAdfNVrwMIIThRpZVAIBNpe0m8?usp=sharing");
+      break;
+    case '4':
+      location.replace("https://www.dropbox.com/scl/fo/ze4hj5xfsj6npvfidbhdp/AA7GA3iVX3FzqtpMJkqqFRM?rlkey=7qs1bz4fy1a5d4fnt7iypy1t6&st=yro08aw0&dl=0");
+      break;
+    case '5':
+      location.replace("https://script.google.com/macros/s/AKfycbyIJ72PC7zptGjNM-iXVcxIgTw-HkutoJy06k0CmVOt7TUH7oEnD4Bzw5vrfTx7zo0F/exec");
+      break;
+  }
+}
 </script>
+
 </body>
 </html>
-
