@@ -2,7 +2,7 @@
 // Aether Drop - Integrated File Drop-Box Module
 // ============================================================================
 
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzZ5H_S_nLY4qF1R5INa-oYodSLZem1Ksj8VK1XUSNKVMSXb1kLg_Jm77MXHj7wECOx/exec"; 
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby1uWE2s1BR9u0iLuQSTDy08ZVQTumqZYxHcRIdB5UwMsg58zrelihUsJSaLmLmfdf9/exec"; 
 const MAX_FILE_SIZE_MB = 35; 
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
