@@ -1656,3 +1656,31 @@ mark {
     display: none;
   }
 }
+
+/* Flight Monitor Table Styles */
+.flight-table th, .flight-table td {
+  padding: 12px 10px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+}
+.flight-table tbody tr:hover {
+  background: var(--bg-surface-hover);
+}
+.flight-num {
+  font-weight: 700;
+  color: #fff;
+  display: block;
+}
+.airline-name {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.origin-city {
+  font-weight: 500;
+  display: block;
+}
+.origin-code {
+  font-size: 11px;
+  color: var(--text-muted);
+}

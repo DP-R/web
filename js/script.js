@@ -84,6 +84,9 @@ function unlockWorkspace() {
 
   // Initialize DB search
   initDbSearch();
+
+  // Initialize Flight Schedule
+  initFlightSchedule();
   
   window.showToast('Authorized', 'Workspace unlocked successfully.', 'success', 2500);
 }
@@ -390,4 +393,117 @@ async function syncDatabase() {
     dbSyncBtn.disabled = false;
     dbSearchBtn.disabled = false;
   }
+}
+
+// ============================================================================
+// Chennai International Flight Monitor Integration
+// ============================================================================
+const flightDataset = [
+  { id: "F1", flightNo: "EK 542", airline: "Emirates", origin: "Dubai", code: "DXB", eta: "02:30", status: "Landed", risk: "high", weight: 840, obcs: 2, watchlist: "Aramex / Industrial Spare Parts" },
+  { id: "F2", flightNo: "6E 1472", airline: "IndiGo", origin: "Dubai", code: "DXB", eta: "02:35", status: "Landed", risk: "high", weight: 350, obcs: 1, watchlist: "OBC / Auto Assemblies" },
+  { id: "F3", flightNo: "6E 1002", airline: "IndiGo", origin: "Singapore", code: "SIN", eta: "06:15", status: "Landed", risk: "medium", weight: 420, obcs: 0, watchlist: "FedEx / Microprocessors" },
+  { id: "F4", flightNo: "AK 11", airline: "AirAsia", origin: "Kuala Lumpur", code: "KUL", eta: "07:25", status: "Landed", risk: "medium", weight: 610, obcs: 1, watchlist: "DHL / Cosmetic Samples" },
+  { id: "F5", flightNo: "EK 544", airline: "Emirates", origin: "Dubai", code: "DXB", eta: "08:05", status: "Landed", risk: "high", weight: 1250, obcs: 3, watchlist: "OBC / Gold Wire in motors" },
+  { id: "F6", flightNo: "SQ 524", airline: "Singapore Airlines", origin: "Singapore", code: "SIN", eta: "09:20", status: "Landed", risk: "medium", weight: 980, obcs: 0, watchlist: "AEO / Tech Components" },
+  { id: "F7", flightNo: "UL 121", airline: "SriLankan Airlines", origin: "Colombo", code: "CMB", eta: "10:15", status: "En Route", risk: "medium", weight: 280, obcs: 2, watchlist: "OBC / Textile samples, Gems" },
+  { id: "F8", flightNo: "MH 182", airline: "Malaysia Airlines", origin: "Kuala Lumpur", code: "KUL", eta: "10:45", status: "En Route", risk: "medium", weight: 550, obcs: 1, watchlist: "TNT / Camera lenses" },
+  { id: "F9", flightNo: "6E 1062", airline: "IndiGo", origin: "Bangkok", code: "BKK", eta: "11:00", status: "En Route", risk: "high", weight: 390, obcs: 0, watchlist: "UPS / Exotic Wildlife (reptiles)" },
+  { id: "F10", flightNo: "6E 1026", airline: "IndiGo", origin: "Singapore", code: "SIN", eta: "12:45", status: "Scheduled", risk: "medium", weight: 310, obcs: 0, watchlist: "DHL / CPU Chips" },
+  { id: "F11", flightNo: "LH 756", airline: "Lufthansa", origin: "Frankfurt", code: "FRA", eta: "13:30", status: "Scheduled", risk: "low", weight: 1450, obcs: 0, watchlist: "AEO / Heavy Machine Tools" },
+  { id: "F12", flightNo: "6E 1174", airline: "IndiGo", origin: "Colombo", code: "CMB", eta: "15:40", status: "Scheduled", risk: "medium", weight: 190, obcs: 2, watchlist: "OBC / Gemstones" },
+  { id: "F13", flightNo: "EK 546", airline: "Emirates", origin: "Dubai", code: "DXB", eta: "20:30", status: "Scheduled", risk: "high", weight: 1100, obcs: 2, watchlist: "OBC / Smart Devices, Watch Gears" },
+  { id: "F14", flightNo: "SQ 528", airline: "Singapore Airlines", origin: "Singapore", code: "SIN", eta: "22:00", status: "Scheduled", risk: "medium", weight: 890, obcs: 1, watchlist: "OBC / CPU chips, currency" },
+  { id: "F15", flightNo: "MH 180", airline: "Malaysia Airlines", origin: "Kuala Lumpur", code: "KUL", eta: "22:50", status: "Scheduled", risk: "medium", weight: 460, obcs: 1, watchlist: "DHL / Mobile Phone spares" },
+  { id: "F16", flightNo: "TG 337", airline: "Thai Airways", origin: "Bangkok", code: "BKK", eta: "23:45", status: "Scheduled", risk: "high", weight: 620, obcs: 2, watchlist: "OBC / Fashion Goods, Turtles" }
+];
+
+const seizureDatabase = [
+  { date: "2026-07-06 09:40", flight: "EK 544", origin: "Dubai (DXB)", commodity: "Gold concealed in motor", value: "84.5 Lakhs", mo: "1.4 kg gold wire wrapped around the copper coils of a commercial water pump, cleared as industrial sample under CBE-XII.", officer: "Insp. Ramachandran" },
+  { date: "2026-07-05 23:55", flight: "TG 337", origin: "Bangkok (BKK)", commodity: "Exotic Wildlife (Air Cargo)", value: "24.0 Lakhs", mo: "140 live red-eared slider turtles and 4 marmosets packed in plastic containers concealed inside a cardboard box declared as 'Garment Samples'.", officer: "Insp. S. Kumar" },
+  { date: "2026-07-05 11:15", flight: "UL 121", origin: "Colombo (CMB)", commodity: "Misdeclared Gems (OBC)", value: "32.2 Lakhs", mo: "Undeclared cut sapphire gemstones hidden inside the double-layered stitching of an OBC courier bag.", officer: "Insp. Anita Raj" },
+  { date: "2026-07-04 03:10", flight: "EK 542", origin: "Dubai (DXB)", commodity: "Foreign Currency Notes", value: "54.8 Lakhs", mo: "USD 65,000 cash notes stacked inside thick rigid cardboard envelopes declared as 'Printed Documents' (CBE-XI).", officer: "Insp. Ramachandran" },
+  { date: "2026-07-03 14:05", flight: "MH 182", origin: "Kuala Lumpur (KUL)", commodity: "CPU Chips in Document Envelope", value: "18.5 Lakhs", mo: "250 high-end Intel i9 CPU units declared as 'technical booklets' in document parcels.", officer: "Insp. Priya Nair" }
+];
+
+let flightRiskFilter, flightSearchInput, flightsTableBody, seizuresTableBody;
+
+function initFlightSchedule() {
+  flightRiskFilter = document.getElementById('flightRiskFilter');
+  flightSearchInput = document.getElementById('flightSearchInput');
+  flightsTableBody = document.getElementById('flightsTableBody');
+  seizuresTableBody = document.getElementById('seizuresTableBody');
+
+  if (!flightsTableBody) return;
+
+  // Bind change and input listeners
+  flightRiskFilter.addEventListener('change', renderFlightsTable);
+  flightSearchInput.addEventListener('input', renderFlightsTable);
+
+  // Initial draw
+  renderFlightsTable();
+  renderSeizuresTable();
+}
+
+function renderFlightsTable() {
+  const filterVal = flightRiskFilter.value;
+  const searchVal = flightSearchInput.value.toLowerCase().trim();
+  
+  let html = "";
+  flightDataset.forEach(f => {
+    const matchFilter = (filterVal === 'all' || f.risk === filterVal);
+    const matchSearch = (f.flightNo.toLowerCase().includes(searchVal) || f.origin.toLowerCase().includes(searchVal));
+    
+    if (matchFilter && matchSearch) {
+      // Risk badge styling
+      let riskClass = "badge cached"; // Default fallback
+      if (f.risk === 'high') riskClass = "badge-danger badge";
+      else if (f.risk === 'medium') riskClass = "badge-warning badge";
+      else if (f.risk === 'low') riskClass = "badge-success badge";
+
+      html += `
+        <tr>
+          <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color);">
+            <span class="flight-num" style="font-weight: 700; color: #fff; display: block;">${f.flightNo}</span>
+            <span class="airline-name" style="font-size: 11px; color: var(--text-muted);">${f.airline}</span>
+          </td>
+          <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color);">
+            <span class="origin-city" style="font-weight: 500; display: block;">${f.origin}</span>
+            <span class="origin-code" style="font-size: 11px; color: var(--text-muted);">(${f.code})</span>
+          </td>
+          <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color); font-family: var(--font-mono);">${f.eta}</td>
+          <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color);">${f.status}</td>
+          <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color);"><span class="${riskClass}">${f.risk.toUpperCase()}</span></td>
+          <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color); font-family: var(--font-mono);">${f.obcs}</td>
+          <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color); font-size: 12px; color: var(--text-secondary);">${f.watchlist}</td>
+        </tr>`;
+    }
+  });
+
+  if (!html) {
+    html = `<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">No flights matching search criteria.</td></tr>`;
+  }
+  
+  flightsTableBody.innerHTML = html;
+}
+
+function renderSeizuresTable() {
+  if (!seizuresTableBody) return;
+  
+  let html = "";
+  seizureDatabase.forEach(s => {
+    html += `
+      <tr>
+        <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 12px;">${s.date}</td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color);">
+          <span style="font-weight: 700; color: #fff; display: block;">${s.flight}</span>
+          <span style="font-size: 11px; color: var(--text-muted);">${s.origin}</span>
+        </td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--color-primary);">${s.commodity}</td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color); font-family: var(--font-mono); font-weight: 600;">${s.value}</td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color); font-size: 12px; color: var(--text-secondary); line-height: 1.4;">${s.mo}</td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid var(--border-color); font-size: 12px;">${s.officer}</td>
+      </tr>`;
+  });
+  
+  seizuresTableBody.innerHTML = html;
 }

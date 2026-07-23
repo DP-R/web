@@ -103,6 +103,12 @@
           </svg>
           Database Search
         </button>
+        <button class="nav-item" data-tab="flightView">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+          Flight Schedule
+        </button>
         <button class="nav-item" data-tab="uploadView">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -343,6 +349,73 @@
 
         <div id="dbSearchStatus" class="db-status"></div>
         <div id="dbSearchResults" class="db-results-container"></div>
+      </section>
+
+      <!-- ============================================================================
+           TAB 5: FLIGHT MONITOR & SCHEDULES
+           ============================================================================ -->
+      <section id="flightView" class="tab-view">
+        <div class="view-header">
+          <h2>Chennai Flight Schedule & Intelligence</h2>
+          <p>International flight arrival monitoring and customs risk indicators</p>
+        </div>
+
+        <div class="flight-dashboard">
+          <div class="card filter-card" style="margin-bottom: 24px;">
+            <div class="search-controls">
+              <select id="flightRiskFilter" title="Filter by Risk">
+                <option value="all">All Risk Levels</option>
+                <option value="high">🔴 High Risk Only</option>
+                <option value="medium">🟡 Medium Risk Only</option>
+                <option value="low">🟢 Low Risk Only</option>
+              </select>
+              <input type="text" id="flightSearchInput" placeholder="Search by Flight No or Origin (e.g. Dubai, SQ)...">
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            <!-- Flights Table Card -->
+            <div class="card" style="overflow-x: auto;">
+              <h3 class="portal-section-title">Incoming International Flights</h3>
+              <table class="flight-table" style="width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px;">
+                <thead>
+                  <tr style="border-bottom: 1.5px solid var(--border-color); text-align: left;">
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Flight Info</th>
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Origin</th>
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">ETA (IST)</th>
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Status</th>
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Risk</th>
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">OBCs</th>
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Watchlist / Cargo Watchlist</th>
+                  </tr>
+                </thead>
+                <tbody id="flightsTableBody">
+                  <!-- Dynamic rows go here -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Seizure log database card -->
+            <div class="card" style="overflow-x: auto;">
+              <h3 class="portal-section-title">Air Courier Seizure Database</h3>
+              <table class="flight-table" style="width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px;">
+                <thead>
+                  <tr style="border-bottom: 1.5px solid var(--border-color); text-align: left;">
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600; min-width: 120px;">Date & Time</th>
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Flight / Route</th>
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Commodity Seized</th>
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Est. Value</th>
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600; min-width: 250px;">Modus Operandi</th>
+                    <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Officer</th>
+                  </tr>
+                </thead>
+                <tbody id="seizuresTableBody">
+                  <!-- Dynamic rows go here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </section>
 
     </main>
