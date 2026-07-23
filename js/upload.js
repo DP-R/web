@@ -9,7 +9,7 @@
 // 3. Set Execute as: "Me" and Who has access: "Anyone".
 // 4. Copy the Web App URL and paste it into the constant below:
 // ============================================================================
-const WEB_APP_URL = ""; 
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzq5A3jbzu4YJ1RFsMmPWdhIyjVFLVJS-jr5jhaBdnOvUiOcXEuZow_S3V7TQzsirC0/exec"; 
 
 // Configuration limits
 const MAX_FILE_SIZE_MB = 35; 
