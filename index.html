@@ -1,63 +1,576 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Secure Access Portal</title>
-<link rel="stylesheet" href="css/login.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Access Workspace</title>
+  
+  <!-- Speed & Connection Hints -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://docs.google.com">
+  <link rel="dns-prefetch" href="https://drive.google.com">
+  <link rel="dns-prefetch" href="https://script.google.com">
+  <link rel="dns-prefetch" href="https://www.dropbox.com">
+
+  <!-- SEO & PWA Meta Tags -->
+  <meta name="description" content="Secure local work portal with integrated tools, scoreboard, clock, and file uploader.">
+  <meta name="theme-color" content="#0b0c10">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+  <link rel="manifest" href="favicon/site.webmanifest">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-<body id="access-body">
+<body>
 
-<!-- Authentication Screen -->
-<div id="login-container">
-  <h2>System Authentication</h2>
-  <p>Please enter your access key:</p>
-  <input type="password" id="password-input" placeholder="[ _ ]" autofocus onkeypress="handleAuth(event)">
-  <div id="error-msg">ERROR: ACCESS DENIED</div>
-</div>
+  <!-- Ambient Glowing Background Blobs -->
+  <div class="glow-orbs">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+  </div>
 
-<!-- Main Links -->
-<div id="main-content" class="btn-group">
-  <button class="button" onclick="navigate('1')">Sheet</button>
-  <button class="button" onclick="navigate('2')">Doc</button>
-  <button class="button" onclick="navigate('3')">Drive</button>
-  <button class="button" onclick="navigate('4')">Dropbox</button>
-  <button class="button" onclick="navigate('5')">Drive Upload</button>
-</div>
+  <!-- Full-Screen Page Drag Overlay (For Uploader) -->
+  <div id="pageDragOverlay" class="page-drag-overlay">
+    <div class="overlay-content">
+      <svg class="overlay-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+      </svg>
+      <h2>Drop files or folders anywhere</h2>
+      <p>Release to add them instantly to your queue</p>
+    </div>
+  </div>
 
-<script>
-function handleAuth(event) {
-  if (event.key === 'Enter') {
-    var password = document.getElementById('password-input').value;
-    if (password === " ") {
-      document.getElementById('login-container').style.display = 'none';
-      document.getElementById('main-content').style.display = 'block';
-    } else {
-      document.getElementById('error-msg').style.visibility = 'visible';
-    }
-  }
-}
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
 
-function navigate(dest) {
-  switch (dest) {
-    case '1':
-      location.replace("https://docs.google.com/spreadsheets/d/1piGYWlsdXF8cMDFxWI3h-T72vF-ef_hq-DL9HCxyLmA/edit?usp=sharing");
-      break;
-    case '2':
-      location.replace("https://docs.google.com/document/d/1TNPklc4dCepMDeZocgGyHjojDBBkv9rQIwmS5bJ_DpE/edit?usp=sharing");
-      break;
-    case '3':
-      location.replace("https://drive.google.com/drive/folders/1WWHuy0bAdfNVrwMIIThRpZVAIBNpe0m8?usp=sharing");
-      break;
-    case '4':
-      location.replace("https://www.dropbox.com/scl/fo/ze4hj5xfsj6npvfidbhdp/AA7GA3iVX3FzqtpMJkqqFRM?rlkey=7qs1bz4fy1a5d4fnt7iypy1t6&st=yro08aw0&dl=0");
-      break;
-    case '5':
-      location.replace("https://script.google.com/macros/s/AKfycbyIJ72PC7zptGjNM-iXVcxIgTw-HkutoJy06k0CmVOt7TUH7oEnD4Bzw5vrfTx7zo0F/exec");
-      break;
-  }
-}
-</script>
+  <!-- Image Lightbox Modal -->
+  <div id="imageLightbox" class="lightbox-modal" style="display: none;">
+    <span class="lightbox-close">&times;</span>
+    <img class="lightbox-content" id="lightboxImg" alt="Image preview">
+    <div id="lightboxCaption" class="lightbox-caption"></div>
+  </div>
 
+  <!-- ============================================================================
+       1. Authentication Lock Screen
+       ============================================================================ -->
+  <div id="auth-overlay" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+        </svg>
+      </div>
+      <h2>System Access</h2>
+      <p>Please enter authorization passcode:</p>
+      
+      <div class="auth-input-wrapper">
+        <input type="password" id="password-input" class="auth-input" placeholder="[ passcode ]" autofocus onkeypress="handleAuthInput(event)">
+      </div>
+      
+      <div id="error-msg" class="auth-error">ERROR: ACCESS DENIED</div>
+    </div>
+  </div>
+
+  <!-- ============================================================================
+       2. Main Dashboard Application Shell
+       ============================================================================ -->
+  <div id="app-layout" class="app-layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-.778.099-1.533.284-2.253" />
+          </svg>
+        </div>
+        <h1>Portal shell</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="dashboardView">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          Dashboard
+        </button>
+        <button class="nav-item" data-tab="portalView">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          Workspace Portal
+        </button>
+        <button class="nav-item" data-tab="uploadView">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          Aether Drop
+        </button>
+        <button class="nav-item" data-tab="searchView">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Database Search
+        </button>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="status-indicator">
+          <span class="status-dot pulsing"></span>
+          <span>Online Caching Active</span>
+        </div>
+        <button class="btn-lock" onclick="lockWorkspace()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+          Lock Workspace
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- ============================================================================
+           TAB 1: IIT MADRAS DASHBOARD
+           ============================================================================ -->
+      <section id="dashboardView" class="tab-view active">
+        <div class="view-header">
+          <h2>IIT Madras Workspace</h2>
+          <p>System clock, schedule overview, and direct interactive spreadsheets</p>
+        </div>
+        
+        <div class="dashboard-grid">
+          
+          <div class="widget-row">
+            <!-- Left panel: Analog & Digital Clocks -->
+            <div class="card clock-widget">
+              <div class="intro-text-container">
+                <div id="demo"></div>
+                <div class="sub-tagline">IIT Madras</div>
+              </div>
+              
+              <!-- Analog clock -->
+              <div class="analog-clock-container">
+                <div id="liveclock" class="outer_face">
+                  <div class="marker oneseven"></div>
+                  <div class="marker twoeight"></div>
+                  <div class="marker fourten"></div>
+                  <div class="marker fiveeleven"></div>
+                  <div class="inner_face">
+                    <div class="hand hour"></div>
+                    <div class="hand minute"></div>
+                    <div class="hand second"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Digital time & date -->
+              <div class="digital-clock-container">
+                <div id="digiclock">--:--<div id="millisec">--</div></div>
+                <div id="digical">------------</div>
+              </div>
+            </div>
+            
+            <!-- Right panel: Document Tab Viewer -->
+            <div class="card workspace-embed-widget">
+              <div class="embed-tabs-bar">
+                <button class="embed-tab-btn active" data-embed="excelPane">Excel</button>
+                <button class="embed-tab-btn" data-embed="wordPane">Word</button>
+                <button class="embed-tab-btn" data-embed="pptPane">PPT</button>
+                <button class="embed-tab-btn" data-embed="timetablePane">Timetable</button>
+              </div>
+              
+              <div class="embed-content-container">
+                <div id="excelPane" class="embed-pane active">
+                  <iframe src="" data-src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQbFzquFuhk1LecpwhWmsSGoOw1HuLS9q_kjqrdRMB1-CSuQWCsKcPa016YLJm_hGNgty9Uh1OV-i_s/pubhtml?widget=true&amp;headers=false&chrome=false"></iframe>
+                  <div class="embed-pane-footer">
+                    <button class="embed-action-btn" onclick="openWorkspaceLink('https://docs.google.com/spreadsheets/d/e/2PACX-1vQbFzquFuhk1LecpwhWmsSGoOw1HuLS9q_kjqrdRMB1-CSuQWCsKcPa016YLJm_hGNgty9Uh1OV-i_s/pubhtml?widget=true&amp;headers=false&chrome=false', 'Excel Sheet', 'sheet')">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px; height:12px;"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg> Expand
+                    </button>
+                  </div>
+                </div>
+                
+                <div id="wordPane" class="embed-pane">
+                  <iframe src="" data-src="https://docs.google.com/document/d/e/2PACX-1vRwPd9NfoJ9vcpukj-avElt4m8mVJ2z5hJMtr06b0dBkOnokwzPIv8_XLYzjJUUPzwY3Lzq2imZNR4R/pub?embedded=true"></iframe>
+                  <div class="embed-pane-footer">
+                    <button class="embed-action-btn" onclick="openWorkspaceLink('https://docs.google.com/document/d/e/2PACX-1vRwPd9NfoJ9vcpukj-avElt4m8mVJ2z5hJMtr06b0dBkOnokwzPIv8_XLYzjJUUPzwY3Lzq2imZNR4R/pub?embedded=true', 'Word Document')">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px; height:12px;"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg> Expand
+                    </button>
+                  </div>
+                </div>
+                
+                <div id="pptPane" class="embed-pane">
+                  <iframe src="" data-src="https://docs.google.com/presentation/d/e/2PACX-1vSqfYPemut7OMkFShdqQ3BqhjAiT7p50j-j-tDHgm0X0hxSnClxuRq0Xbi4cRaZtNiXw4pa_UIlux9G/embed?start=true&loop=true&delayms=3000" allowfullscreen="true"></iframe>
+                  <div class="embed-pane-footer">
+                    <button class="embed-action-btn" onclick="openWorkspaceLink('https://docs.google.com/presentation/d/e/2PACX-1vSqfYPemut7OMkFShdqQ3BqhjAiT7p50j-j-tDHgm0X0hxSnClxuRq0Xbi4cRaZtNiXw4pa_UIlux9G/embed?start=true&loop=true&delayms=3000', 'PPT Slide Presentation')">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px; height:12px;"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg> Expand
+                    </button>
+                  </div>
+                </div>
+                
+                <div id="timetablePane" class="embed-pane">
+                  <div class="timetable-img-wrapper">
+                    <img src="images/time table.png" alt="Timetable">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mountain Easter egg -->
+          <div class="mountain-decorator" onclick="triggerEasterEgg()">
+            <img class="mountain-bg" src="images/mountain.png" alt="Mountain Decorator">
+            <span>Click to explore</span>
+          </div>
+          
+        </div>
+      </section>
+
+      <!-- ============================================================================
+           TAB 2: WORKSPACE PORTAL (Quick Launch Links)
+           ============================================================================ */
+      <section id="portalView" class="tab-view">
+        <div class="view-header">
+          <h2>Workspace Portal</h2>
+          <p>Quick access to files, sheets, and documents in secure workspaces</p>
+        </div>
+
+        <div class="portal-container">
+          
+          <!-- Cloud Workspaces -->
+          <h3 class="portal-section-title">Core Workspaces</h3>
+          <div class="link-grid">
+            <div class="link-card" onclick="openWorkspaceLink('https://docs.google.com/spreadsheets/d/1piGYWlsdXF8cMDFxWI3h-T72vF-ef_hq-DL9HCxyLmA/edit?usp=sharing', 'Google Spreadsheets Workspace', 'sheet')">
+              <div class="link-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div class="link-card-info">
+                <span class="link-card-name">Google Sheet</span>
+                <span class="link-card-desc">Worksheets & Tables</span>
+              </div>
+            </div>
+            
+            <div class="link-card" onclick="openWorkspaceLink('https://docs.google.com/document/d/1TNPklc4dCepMDeZocgGyHjojDBBkv9rQIwmS5bJ_DpE/edit?usp=sharing', 'Google Document Workspace')">
+              <div class="link-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div class="link-card-info">
+                <span class="link-card-name">Google Doc</span>
+                <span class="link-card-desc">Personal Notes & Docs</span>
+              </div>
+            </div>
+            
+            <div class="link-card" onclick="openWorkspaceLink('https://drive.google.com/drive/folders/1WWHuy0bAdfNVrwMIIThRpZVAIBNpe0m8?usp=sharing', 'Google Drive Workspace', 'drive')">
+              <div class="link-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+              </div>
+              <div class="link-card-info">
+                <span class="link-card-name">Google Drive</span>
+                <span class="link-card-desc">Shared Folder Directory</span>
+              </div>
+            </div>
+
+            <div class="link-card" onclick="openWorkspaceLink('https://script.google.com/macros/s/AKfycbyIJ72PC7zptGjNM-iXVcxIgTw-HkutoJy06k0CmVOt7TUH7oEnD4Bzw5vrfTx7zo0F/exec', 'Drive Upload Form')">
+              <div class="link-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+              </div>
+              <div class="link-card-info">
+                <span class="link-card-name">Drive Upload</span>
+                <span class="link-card-desc">Apps Script Upload Form</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cloud Storage links -->
+          <h3 class="portal-section-title">Cloud Storage</h3>
+          <div class="link-grid">
+            <div class="link-card" onclick="openWorkspaceLink('https://www.dropbox.com/scl/fo/ze4hj5xfsj6npvfidbhdp/AA7GA3iVX3FzqtpMJkqqFRM?rlkey=7qs1bz4fy1a5d4fnt7iypy1t6&st=yro08aw0&dl=0', 'Dropbox Folder', 'drive')">
+              <div class="link-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div class="link-card-info">
+                <span class="link-card-name">Dropbox Folder</span>
+                <span class="link-card-desc">Main Backup Directory</span>
+              </div>
+            </div>
+
+            <div class="link-card" onclick="openWorkspaceLink('https://www.dropbox.com/scl/fo/zcngb0qsa62qizacfds85/AAWbk-LL-eyCPKsl3vlmbl0?rlkey=bcqwfwewnsc6w578k99272alw&st=zx2vfias&dl=0', 'Dropbox Office Folder', 'drive')">
+              <div class="link-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div class="link-card-info">
+                <span class="link-card-name">Dropbox Office</span>
+                <span class="link-card-desc">Office Files Backup</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sports & Games rules/scoreboards -->
+          <h3 class="portal-section-title">Sports & Games</h3>
+          <div class="link-grid sports-theme">
+            <div class="link-card" onclick="openWorkspaceLink('https://docs.google.com/document/d/1dGSRq70Z7ro26EzA3EEWZliA6s8aSwM1aDsZXvbr8MM/edit?usp=sharing', 'Chess Rules & Specifications')">
+              <div class="link-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div class="link-card-info">
+                <span class="link-card-name">Rules for Chess</span>
+                <span class="link-card-desc">FIDE Guidelines & Game Setup</span>
+              </div>
+            </div>
+
+            <div class="link-card" onclick="openWorkspaceLink('https://docs.google.com/document/d/1aXeMmum7bttIPqRDLWGkco4M5h2a0SrFvGqxEz3epIs/edit?usp=sharing', 'Carrom Rules & Setup')">
+              <div class="link-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div class="link-card-info">
+                <span class="link-card-name">Rules for Carroms</span>
+                <span class="link-card-desc">Scoring Guidelines & Regulations</span>
+              </div>
+            </div>
+
+            <div class="link-card" onclick="openWorkspaceLink('https://docs.google.com/document/d/1Xb7N_oXQhsR9axEa4VIaZufpTaXimGMuWAGn_4OyN9o/edit?usp=sharing', 'Table Tennis Rules')">
+              <div class="link-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div class="link-card-info">
+                <span class="link-card-name">Rules for TT</span>
+                <span class="link-card-desc">ITTF Table Tennis Laws</span>
+              </div>
+            </div>
+
+            <div class="link-card" onclick="openWorkspaceLink('https://docs.google.com/spreadsheets/d/1DvizAqEHL0B7wPn9ZgblxPzTdPrWOY6D8yKFaNbskms/edit?usp=sharing', 'Sports Scoreboard Spreadsheets', 'sheet')">
+              <div class="link-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div class="link-card-info">
+                <span class="link-card-name">Scoreboard</span>
+                <span class="link-card-desc">Interactive Scores Sheet</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================================================
+           TAB 3: AETHER DROP UPLOADER
+           ============================================================================ */
+      <section id="uploadView" class="tab-view">
+        <div class="view-header">
+          <h2>Aether Drop</h2>
+          <p>Drag and drop directory uploader linked directly with Google Drive</p>
+        </div>
+
+        <div class="upload-container">
+          
+          <!-- Folder select -->
+          <div class="upload-destination">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+            <div class="destination-inputs">
+              <label for="folderName">Target Directory Name</label>
+              <input type="text" id="folderName" placeholder="Create or select a subfolder (e.g. Chess Tournament 2026)">
+            </div>
+          </div>
+
+          <!-- Drop zone -->
+          <div id="dropZone" class="drop-zone">
+            <input type="file" id="fileInput" multiple style="display: none;">
+            <input type="file" id="folderInput" webkitdirectory multiple style="display: none;">
+            
+            <div class="drop-zone-content">
+              <div class="cloud-icon-container">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 32px; height: 32px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                </svg>
+              </div>
+              <h3>Drag and drop files or folders here</h3>
+              <p class="dropzone-sub">Supports single files, multi-select, and complete directory structures (max 35MB per file)</p>
+              
+              <div class="dropzone-actions">
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg> Browse Files
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('folderInput').click()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Upload Folder
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Queue Management Toolbar -->
+          <div class="queue-toolbar">
+            <div class="queue-title">
+              Upload Queue <span id="queueCount" class="queue-count-badge">0</span>
+            </div>
+            
+            <div class="toolbar-controls">
+              <div class="select-wrapper">
+                <select id="queueSort">
+                  <option value="added-asc">Order Added</option>
+                  <option value="name-asc">Name (A-Z)</option>
+                  <option value="name-desc">Name (Z-A)</option>
+                  <option value="size-desc">Size (Largest)</option>
+                  <option value="size-asc">Size (Smallest)</option>
+                </select>
+              </div>
+              
+              <div class="select-wrapper">
+                <select id="uploadConcurrency">
+                  <option value="1">Sequential (1-by-1)</option>
+                  <option value="2">2 Concurrent Uploads</option>
+                  <option value="3">3 Concurrent Uploads</option>
+                </select>
+              </div>
+
+              <button id="clearQueueBtn" class="text-btn text-danger">Clear Queue</button>
+            </div>
+          </div>
+
+          <!-- Hide search bar by default for simplicity, search query is read programmatically -->
+          <input type="hidden" id="queueSearch" value="">
+          
+          <div class="filter-tabs" id="filterTabs" style="display: none;">
+            <button class="tab-btn active" data-filter="all">All</button>
+          </div>
+
+          <!-- File upload progress items -->
+          <div id="fileList" class="file-list empty">
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25-2.25M12 13.875V9.75M3.75 7.5h16.5M9 5.625h6M9 5.625a1.875 1.875 0 113.75 0h-3.75z" />
+              </svg>
+              <p>No files in queue. Drag & drop files or folders above to get started.</p>
+            </div>
+          </div>
+
+          <!-- Overall Queue progress footer -->
+          <div class="queue-footer" id="queueFooter" style="display: none;">
+            <div class="summary-details">
+              <div class="summary-text">
+                <span id="summaryUploadStatus">Ready to Upload</span>
+                <span id="summaryProgressStats">0 / 0 files • 0 MB</span>
+              </div>
+              <span id="summaryPercent" class="summary-percent">0%</span>
+            </div>
+            
+            <div class="overall-progress-container">
+              <div id="overallProgressBar" class="overall-progress-bar"></div>
+            </div>
+
+            <div class="footer-actions">
+              <button id="uploadBtn" class="btn btn-primary btn-large btn-glow" onclick="processAndUpload()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg> Upload to Google Drive
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================================================
+           TAB 4: DATABASE SEARCH
+           ============================================================================ -->
+      <section id="searchView" class="tab-view">
+        <div class="view-header">
+          <h2>Database Search</h2>
+          <p>Scan Google Drive folders live and query cached persistent spreadsheet indexes</p>
+        </div>
+
+        <div class="card">
+          <div class="search-controls">
+            <select id="dbFolderSelect" title="Select Folder">
+              <option value="1WWHuy0bAdfNVrwMIIThRpZVAIBNpe0m8">All Master Folders</option>
+            </select>
+            <input type="text" id="dbSearchInput" placeholder="Enter keywords to search..." autocomplete="off">
+            <button onclick="executeDbSearch()" id="dbSearchBtn" class="btn btn-primary">
+              <svg style="width: 14px; height: 14px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg> Search
+            </button>
+            <button onclick="syncDatabase()" id="dbSyncBtn" class="btn btn-secondary">
+              <svg style="width: 14px; height: 14px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 16H20M3.58 9a9 9 0 010-2" />
+              </svg> Sync Database
+            </button>
+          </div>
+        </div>
+
+        <div id="dbSearchStatus" class="db-status"></div>
+        <div id="dbSearchResults" class="db-results-container"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============================================================================
+       3. Full-Screen Integrated Workspace Viewer Modal
+       ============================================================================ -->
+  <div id="workspace-viewer" class="workspace-viewer">
+    <div class="viewer-header">
+      <div class="viewer-info">
+        <div class="viewer-icon-wrapper">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3M12 3a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582" />
+          </svg>
+        </div>
+        <div class="viewer-title-group">
+          <span id="viewer-title" class="viewer-title">Spreadsheet Title</span>
+          <span id="viewer-subtitle" class="viewer-subtitle">Google Spreadsheets Workspace</span>
+        </div>
+      </div>
+      
+      <div class="viewer-controls">
+        <button class="btn-icon" onclick="refreshWorkspaceViewer()" title="Reload Frame">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17" /></svg>
+        </button>
+        <button class="btn-icon" onclick="openViewerNative()" title="Open in New Tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+        </button>
+        <button class="btn-icon btn-close-viewer" onclick="closeWorkspaceViewer()" title="Close Viewer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+    </div>
+    
+    <div class="viewer-iframe-wrapper">
+      <div id="viewer-loader" class="viewer-loader">
+        <div class="spinner"></div>
+        <p>Loading Workspace Document...</p>
+      </div>
+      <iframe id="viewer-iframe" src=""></iframe>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/upload.js"></script>
+  <script src="js/script.js"></script>
 </body>
 </html>

@@ -1,17 +1,8 @@
 // ============================================================================
-// Aether Drop - Client Upload JavaScript
+// Aether Drop - Integrated File Drop-Box Module
 // ============================================================================
-// CONFIGURATION:
-// If hosting this uploader on an external static website (like this repository),
-// you MUST deploy your Google Apps Script project as a Web App:
-// 1. In your Apps Script editor, click Deploy > New deployment.
-// 2. Select type: "Web app".
-// 3. Set Execute as: "Me" and Who has access: "Anyone".
-// 4. Copy the Web App URL and paste it into the constant below:
-// ============================================================================
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzq5A3jbzu4YJ1RFsMmPWdhIyjVFLVJS-jr5jhaBdnOvUiOcXEuZow_S3V7TQzsirC0/exec"; 
 
-// Configuration limits
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzq5A3jbzu4YJ1RFsMmPWdhIyjVFLVJS-jr5jhaBdnOvUiOcXEuZow_S3V7TQzsirC0/exec"; 
 const MAX_FILE_SIZE_MB = 35; 
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
@@ -20,158 +11,109 @@ let selectedFiles = [];
 let isUploading = false;
 let activeUploadsCount = 0;
 
-// Elements caching
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-const folderInput = document.getElementById('folderInput');
-const fileListContainer = document.getElementById('fileList');
-const uploadBtn = document.getElementById('uploadBtn');
-const folderNameInput = document.getElementById('folderName');
-const clearFolderBtn = document.getElementById('clearFolderBtn');
-const queueSearch = document.getElementById('queueSearch');
-const queueSort = document.getElementById('queueSort');
-const filterTabs = document.getElementById('filterTabs');
-const clearQueueBtn = document.getElementById('clearQueueBtn');
+// Variables for DOM elements (cached on initialization)
+let dropZone, fileInput, folderInput, fileListContainer, uploadBtn, folderNameInput;
+let queueSearch, queueSort, filterTabs, clearQueueBtn, uploadConcurrency;
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  initTheme();
-  renderFileList();
-  updateClearFolderBtnVisibility();
-  
-  // Show setup guidance toast if hosted externally and URL not set
-  if ((typeof google === 'undefined' || !google.script) && !WEB_APP_URL) {
-    setTimeout(() => {
-      showToast(
-        'Setup Required', 
-        'Please configure your Google Apps Script Web App URL at the top of \'js/upload.js\' to enable file uploads.', 
-        'warning', 
-        8000
-      );
-    }, 1000);
-  }
-});
+function initUploader() {
+  dropZone = document.getElementById('dropZone');
+  fileInput = document.getElementById('fileInput');
+  folderInput = document.getElementById('folderInput');
+  fileListContainer = document.getElementById('fileList');
+  uploadBtn = document.getElementById('uploadBtn');
+  folderNameInput = document.getElementById('folderName');
+  queueSearch = document.getElementById('queueSearch');
+  queueSort = document.getElementById('queueSort');
+  filterTabs = document.getElementById('filterTabs');
+  clearQueueBtn = document.getElementById('clearQueueBtn');
+  uploadConcurrency = document.getElementById('uploadConcurrency');
 
-// Theme Toggle Logic
-function initTheme() {
-  const body = document.body;
-  const themeToggle = document.getElementById('themeToggle');
-  const sunIcon = themeToggle.querySelector('.sun-icon');
-  const moonIcon = themeToggle.querySelector('.moon-icon');
-  const savedTheme = localStorage.getItem('theme') || 'dark';
+  if (!dropZone) return; // Exit if elements are not present
 
-  if (savedTheme === 'light') {
-    body.classList.remove('theme-dark');
-    body.classList.add('theme-light');
-    sunIcon.style.display = 'none';
-    moonIcon.style.display = 'block';
-  } else {
-    body.classList.remove('theme-dark');
-    body.classList.add('theme-dark');
-    sunIcon.style.display = 'block';
-    moonIcon.style.display = 'none';
-  }
-}
-
-document.getElementById('themeToggle').addEventListener('click', () => {
-  const body = document.body;
-  const themeToggle = document.getElementById('themeToggle');
-  const sunIcon = themeToggle.querySelector('.sun-icon');
-  const moonIcon = themeToggle.querySelector('.moon-icon');
-
-  if (body.classList.contains('theme-dark')) {
-    body.classList.remove('theme-dark');
-    body.classList.add('theme-light');
-    sunIcon.style.display = 'none';
-    moonIcon.style.display = 'block';
-    localStorage.setItem('theme', 'light');
-    showToast('Light Theme', 'Switched to light mode.', 'info', 1800);
-  } else {
-    body.classList.remove('theme-light');
-    body.classList.add('theme-dark');
-    sunIcon.style.display = 'block';
-    moonIcon.style.display = 'none';
-    localStorage.setItem('theme', 'dark');
-    showToast('Dark Theme', 'Switched to dark mode.', 'info', 1800);
-  }
-});
-
-// Dropzone click - Open file browser (only if uploader not busy and not clicking button inside)
-dropZone.addEventListener('click', (e) => {
-  if (isUploading) return;
-  if (!e.target.closest('.btn')) {
-    fileInput.click();
-  }
-});
-
-// Folder Name input custom clear action
-folderNameInput.addEventListener('input', updateClearFolderBtnVisibility);
-clearFolderBtn.addEventListener('click', () => {
-  if (isUploading) return;
-  folderNameInput.value = '';
-  updateClearFolderBtnVisibility();
-  folderNameInput.focus();
-});
-
-function updateClearFolderBtnVisibility() {
-  clearFolderBtn.style.display = folderNameInput.value ? 'block' : 'none';
-}
-
-// File Inputs Event Listeners
-fileInput.addEventListener('change', (e) => {
-  handleFiles(Array.from(e.target.files));
-  e.target.value = ''; // Reset input
-});
-
-folderInput.addEventListener('change', (e) => {
-  const files = Array.from(e.target.files);
-  files.forEach(file => {
-    if (file.webkitRelativePath) {
-      file.filepath = file.webkitRelativePath;
+  // Dropzone click - Open file browser
+  dropZone.addEventListener('click', (e) => {
+    if (isUploading) return;
+    if (!e.target.closest('.btn')) {
+      fileInput.click();
     }
   });
-  handleFiles(files);
-  e.target.value = ''; // Reset input
-});
 
-// Drag and Drop counter pattern to prevent overlay flashing
-let dragCounter = 0;
-window.addEventListener('dragenter', (e) => {
-  e.preventDefault();
-  if (isUploading) return;
-  dragCounter++;
-  if (dragCounter === 1) {
-    document.getElementById('pageDragOverlay').classList.add('active');
-  }
-});
+  // File Inputs Event Listeners
+  fileInput.addEventListener('change', (e) => {
+    handleFiles(Array.from(e.target.files));
+    e.target.value = ''; // Reset input
+  });
 
-window.addEventListener('dragleave', (e) => {
-  e.preventDefault();
-  if (isUploading) return;
-  dragCounter--;
-  if (dragCounter === 0) {
+  folderInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      if (file.webkitRelativePath) {
+        file.filepath = file.webkitRelativePath;
+      }
+    });
+    handleFiles(files);
+    e.target.value = ''; // Reset input
+  });
+
+  // Drag and Drop counter pattern
+  let dragCounter = 0;
+  window.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    if (isUploading || !document.getElementById('app-layout').classList.contains('unlocked')) return;
+    dragCounter++;
+    if (dragCounter === 1) {
+      document.getElementById('pageDragOverlay').classList.add('active');
+    }
+  });
+
+  window.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    if (isUploading || !document.getElementById('app-layout').classList.contains('unlocked')) return;
+    dragCounter--;
+    if (dragCounter === 0) {
+      document.getElementById('pageDragOverlay').classList.remove('active');
+    }
+  });
+
+  window.addEventListener('dragover', (e) => {
+    e.preventDefault();
+  });
+
+  window.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (isUploading || !document.getElementById('app-layout').classList.contains('unlocked')) return;
+    dragCounter = 0;
     document.getElementById('pageDragOverlay').classList.remove('active');
-  }
-});
+    
+    if (e.dataTransfer.items) {
+      handleDropEntries(e.dataTransfer.items);
+    } else {
+      handleFiles(Array.from(e.dataTransfer.files));
+    }
+  });
 
-window.addEventListener('dragover', (e) => {
-  e.preventDefault();
-});
+  // Clear entire queue
+  clearQueueBtn.addEventListener('click', () => {
+    if (isUploading) return;
+    clearQueue();
+  });
 
-window.addEventListener('drop', (e) => {
-  e.preventDefault();
-  if (isUploading) return;
-  dragCounter = 0;
-  document.getElementById('pageDragOverlay').classList.remove('active');
+  // Search, Sort and Filter Events
+  queueSearch.addEventListener('input', () => renderFileList());
+  queueSort.addEventListener('change', () => renderFileList());
   
-  if (e.dataTransfer.items) {
-    handleDropEntries(e.dataTransfer.items);
-  } else {
-    handleFiles(Array.from(e.dataTransfer.files));
-  }
-});
+  filterTabs.addEventListener('click', (e) => {
+    if (e.target.classList.contains('tab-btn')) {
+      filterTabs.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      e.target.classList.add('active');
+      renderFileList();
+    }
+  });
 
-// High-performance directory tree uploader traverser
+  renderFileList();
+}
+
+// Drag and drop directory traverser
 async function handleDropEntries(items) {
   const promises = [];
   for (let i = 0; i < items.length; i++) {
@@ -226,29 +168,24 @@ function readAllEntries(dirReader) {
   });
 }
 
-// Handle addition of files to the queue
+// Handle adding files to the queue
 function handleFiles(files) {
   if (isUploading) {
-    showToast('Busy', 'Please wait until the current upload process is completed.', 'warning');
+    window.showToast('Upload in Progress', 'Please wait until current uploads finish.', 'warning');
     return;
   }
 
   let addedCount = 0;
-  let sizeRejectedCount = 0;
 
   files.forEach(file => {
-    // Validate File Size
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      showToast('Size Exceeded', `'${file.name}' is larger than ${MAX_FILE_SIZE_MB}MB.`, 'danger', 5000);
-      sizeRejectedCount++;
+      window.showToast('File Too Large', `'${file.name}' exceeds the ${MAX_FILE_SIZE_MB}MB limit.`, 'danger', 5000);
       return;
     }
 
-    // Extract details
     const nameParts = file.name.split('.');
     const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : 'file';
 
-    // Create ObjectURL for Image previews
     let thumbnailUrl = null;
     if (file.type.startsWith('image/')) {
       thumbnailUrl = URL.createObjectURL(file);
@@ -277,25 +214,25 @@ function handleFiles(files) {
 
   if (addedCount > 0) {
     renderFileList();
-    showToast('Queue Updated', `Added ${addedCount} file(s) to the queue.`, 'success', 3000);
+    window.showToast('Files Added', `Added ${addedCount} file(s) to the queue.`, 'success', 3000);
   }
 }
 
-// Remove individual file card
+// Remove single file
 function removeFile(id) {
   if (isUploading) return;
   const index = selectedFiles.findIndex(f => f.id === id);
   if (index !== -1) {
     const fObj = selectedFiles[index];
     if (fObj.thumbnailUrl) {
-      URL.revokeObjectURL(fObj.thumbnailUrl); // Free up browser memory leaks
+      URL.revokeObjectURL(fObj.thumbnailUrl);
     }
     selectedFiles.splice(index, 1);
     renderFileList();
   }
 }
 
-// Retry individual upload file
+// Retry single file
 function retryFile(id) {
   if (isUploading) return;
   const fObj = selectedFiles.find(f => f.id === id);
@@ -308,12 +245,7 @@ function retryFile(id) {
   }
 }
 
-// Clear entire queue
-clearQueueBtn.addEventListener('click', () => {
-  if (isUploading) return;
-  clearQueue();
-});
-
+// Clear queue
 function clearQueue() {
   selectedFiles.forEach(fObj => {
     if (fObj.thumbnailUrl) {
@@ -322,42 +254,26 @@ function clearQueue() {
   });
   selectedFiles = [];
   renderFileList();
-  showToast('Queue Cleared', 'All files removed from the queue.', 'info', 2000);
+  window.showToast('Queue Cleared', 'Removed all files from queue.', 'info', 2000);
 }
 
-// Search input change
-queueSearch.addEventListener('input', () => renderFileList());
-
-// Sort selector change
-queueSort.addEventListener('change', () => renderFileList());
-
-// Filters Tab Clicks
-filterTabs.addEventListener('click', (e) => {
-  if (e.target.classList.contains('tab-btn')) {
-    filterTabs.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    e.target.classList.add('active');
-    renderFileList();
-  }
-});
-
-// Render Queue File list with sorting, searching, and filters
+// Render queue list with filters, search, and sorting
 function renderFileList() {
-  const activeFilterBtn = filterTabs.querySelector('.tab-btn.active');
+  if (!fileListContainer) return;
+
+  const activeFilterBtn = filterTabs ? filterTabs.querySelector('.tab-btn.active') : null;
   const filterType = activeFilterBtn ? activeFilterBtn.dataset.filter : 'all';
   
-  // 1. Filter
   let processed = filterFiles(selectedFiles, filterType);
   
-  // 2. Search
-  const query = queueSearch.value.trim();
+  const query = queueSearch ? queueSearch.value.trim() : '';
   processed = searchFiles(processed, query);
   
-  // 3. Sort
-  const sortBy = queueSort.value;
+  const sortBy = queueSort ? queueSort.value : 'added-asc';
   processed = sortFiles(processed, sortBy);
 
   const queueCount = document.getElementById('queueCount');
-  queueCount.innerText = selectedFiles.length;
+  if (queueCount) queueCount.innerText = selectedFiles.length;
 
   if (selectedFiles.length === 0) {
     fileListContainer.className = 'file-list empty';
@@ -381,7 +297,7 @@ function renderFileList() {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        <p>No files match your filter or search criteria.</p>
+        <p>No files match your search or filter.</p>
       </div>
     `;
   } else {
@@ -391,7 +307,7 @@ function renderFileList() {
   updateOverallProgress();
 }
 
-// Filter Helper
+// Helpers for sorting, searching, filtering
 function filterFiles(files, filterType) {
   if (filterType === 'all') return files;
   
@@ -414,14 +330,12 @@ function filterFiles(files, filterType) {
   });
 }
 
-// Search Helper
 function searchFiles(files, query) {
   if (!query) return files;
   const q = query.toLowerCase();
   return files.filter(f => f.name.toLowerCase().includes(q) || f.filepath.toLowerCase().includes(q));
 }
 
-// Sort Helper
 function sortFiles(files, criteria) {
   const sorted = [...files];
   switch (criteria) {
@@ -439,12 +353,12 @@ function sortFiles(files, criteria) {
   }
 }
 
-// Create single file card HTML
+// Generate file item card HTML
 function createFileCardHtml(fObj) {
   const isImg = fObj.file.type.startsWith('image/');
   const styleAttr = (isImg && fObj.thumbnailUrl) ? `style="background-image: url('${fObj.thumbnailUrl}')"` : '';
   const thumbClass = isImg ? 'file-thumbnail preview-clickable' : 'file-thumbnail';
-  const clickHandler = isImg ? `onclick="openLightbox('${fObj.id}')"` : '';
+  const clickHandler = isImg ? `onclick="openLightboxImage('${fObj.id}')"` : '';
   
   const iconContent = isImg ? '' : getFileIconSvg(fObj.extension, fObj.type);
   
@@ -475,7 +389,7 @@ function createFileCardHtml(fObj) {
   } else if (fObj.status === 'uploading') {
     statusBadge = `<span class="badge badge-warning"><span class="spinner-small"></span> Uploading</span>`;
     progressStyle = 'block';
-    actionsHtml = ''; // disable remove button during active upload
+    actionsHtml = '';
   } else if (fObj.status === 'success') {
     statusBadge = `<span class="badge badge-success">Success</span>`;
     actionsHtml = `
@@ -523,40 +437,28 @@ function createFileCardHtml(fObj) {
   `;
 }
 
-// Get Custom SVG Icon path based on file extension
+// Map file types to appropriate inline icons
 function getFileIconSvg(extension, mimeType) {
   const ext = extension.toLowerCase();
   
-  // Audio & Video Media
   if (['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'mp3', 'wav', 'ogg', 'm4a'].includes(ext) || mimeType.startsWith('video/') || mimeType.startsWith('audio/')) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l5-3v10l-5-3v-4z"/><rect x="2" y="5" width="13" height="14" rx="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   }
-  
-  // PDF Document
   if (ext === 'pdf' || mimeType === 'application/pdf') {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10h3m-3 4h3m-9-4h.01M3 19V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>`;
   }
-  
-  // Office / Text Documents
   if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'rtf', 'csv'].includes(ext) || mimeType.startsWith('text/')) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>`;
   }
-  
-  // Compressed Archives
   if (['zip', 'rar', 'tar', 'gz', '7z'].includes(ext) || mimeType.includes('zip') || mimeType.includes('compressed')) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25-2.25M12 13.875V9.75M3.75 7.5h16.5M9 5.625h6M9 5.625a1.875 1.875 0 113.75 0h-3.75z" /></svg>`;
   }
-  
-  // Code files
   if (['html', 'css', 'js', 'ts', 'py', 'java', 'cpp', 'c', 'cs', 'go', 'json', 'xml', 'yaml', 'yml'].includes(ext)) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>`;
   }
-  
-  // Fallback Generic File
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>`;
 }
 
-// Format File Bytes Utility
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -566,7 +468,6 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-// Update card UI details selectively without list re-rendering
 function updateCardUI(fObj) {
   const card = document.getElementById(`card-${fObj.id}`);
   if (card) {
@@ -574,7 +475,6 @@ function updateCardUI(fObj) {
   }
 }
 
-// Update single card progress bar style directly
 function updateProgressUI(fileId, progressVal) {
   const fill = document.getElementById(`progressFill-${fileId}`);
   if (fill) {
@@ -582,17 +482,17 @@ function updateProgressUI(fileId, progressVal) {
   }
 }
 
-// Update overall progress bar footer stats
+// Update overall UI stats
 function updateOverallProgress() {
   const queueFooter = document.getElementById('queueFooter');
   const total = selectedFiles.length;
   
   if (total === 0) {
-    queueFooter.style.display = 'none';
+    if (queueFooter) queueFooter.style.display = 'none';
     return;
   }
   
-  queueFooter.style.display = 'block';
+  if (queueFooter) queueFooter.style.display = 'block';
   
   const successCount = selectedFiles.filter(f => f.status === 'success').length;
   const uploadingCount = selectedFiles.filter(f => f.status === 'uploading').length;
@@ -602,8 +502,11 @@ function updateOverallProgress() {
   const sumProgress = selectedFiles.reduce((acc, f) => acc + f.progress, 0);
   const avgProgress = Math.floor(sumProgress / total);
   
-  document.getElementById('overallProgressBar').style.width = `${avgProgress}%`;
-  document.getElementById('summaryPercent').innerText = `${avgProgress}%`;
+  const overallBar = document.getElementById('overallProgressBar');
+  if (overallBar) overallBar.style.width = `${avgProgress}%`;
+  
+  const percentText = document.getElementById('summaryPercent');
+  if (percentText) percentText.innerText = `${avgProgress}%`;
   
   const totalSizeBytes = selectedFiles.reduce((acc, f) => acc + f.size, 0);
   const uploadedSizeBytes = selectedFiles.reduce((acc, f) => {
@@ -612,46 +515,48 @@ function updateOverallProgress() {
     return acc;
   }, 0);
   
-  document.getElementById('summaryProgressStats').innerText = 
-    `${successCount} / ${total} files uploaded • ${formatBytes(uploadedSizeBytes)} of ${formatBytes(totalSizeBytes)}`;
+  const progressStats = document.getElementById('summaryProgressStats');
+  if (progressStats) {
+    progressStats.innerText = `${successCount} / ${total} files uploaded • ${formatBytes(uploadedSizeBytes)} of ${formatBytes(totalSizeBytes)}`;
+  }
   
   const summaryUploadStatus = document.getElementById('summaryUploadStatus');
-  
-  if (isUploading) {
-    summaryUploadStatus.innerText = `Uploading (${uploadingCount} active...)`;
-  } else {
-    if (pendingCount + errorCount > 0) {
-      summaryUploadStatus.innerText = 'Ready to Upload';
+  if (summaryUploadStatus) {
+    if (isUploading) {
+      summaryUploadStatus.innerText = `Uploading (${uploadingCount} active...)`;
     } else {
-      summaryUploadStatus.innerText = 'Uploads Completed';
+      if (pendingCount + errorCount > 0) {
+        summaryUploadStatus.innerText = 'Ready to Upload';
+      } else {
+        summaryUploadStatus.innerText = 'Uploads Completed';
+      }
     }
   }
 }
 
-// Update overall interaction disable/enable state during uploads
+// Lock inputs/buttons during uploads
 function updateGlobalUIState() {
   const clearQueueBtn = document.getElementById('clearQueueBtn');
-  const concurrencySelect = document.getElementById('uploadConcurrency');
-  const filterTabsBtns = filterTabs.querySelectorAll('.tab-btn');
+  const filterTabsBtns = filterTabs ? filterTabs.querySelectorAll('.tab-btn') : [];
   
   if (isUploading) {
-    folderNameInput.disabled = true;
-    concurrencySelect.disabled = true;
-    clearQueueBtn.disabled = true;
-    uploadBtn.disabled = true;
-    dropZone.classList.add('uploading');
+    if (folderNameInput) folderNameInput.disabled = true;
+    if (uploadConcurrency) uploadConcurrency.disabled = true;
+    if (clearQueueBtn) clearQueueBtn.disabled = true;
+    if (uploadBtn) uploadBtn.disabled = true;
+    if (dropZone) dropZone.classList.add('uploading');
     filterTabsBtns.forEach(btn => btn.disabled = true);
   } else {
-    folderNameInput.disabled = false;
-    concurrencySelect.disabled = false;
-    clearQueueBtn.disabled = false;
-    uploadBtn.disabled = false;
-    dropZone.classList.remove('uploading');
+    if (folderNameInput) folderNameInput.disabled = false;
+    if (uploadConcurrency) uploadConcurrency.disabled = false;
+    if (clearQueueBtn) clearQueueBtn.disabled = false;
+    if (uploadBtn) uploadBtn.disabled = false;
+    if (dropZone) dropZone.classList.remove('uploading');
     filterTabsBtns.forEach(btn => btn.disabled = false);
   }
 }
 
-// Upload Single File Logic (Reads base64 + updates simulated progress)
+// Upload a single file base64
 async function uploadSingleFile(fObj, folderName) {
   fObj.status = 'uploading';
   fObj.progress = 5;
@@ -660,11 +565,10 @@ async function uploadSingleFile(fObj, folderName) {
 
   let progressInterval = null;
 
-  // Simulated progress tick (slowing down as it approaches 95%)
   const startProgressSimulation = () => {
     progressInterval = setInterval(() => {
       if (fObj.progress < 85) {
-        fObj.progress += Math.floor(Math.random() * 6) + 3; // +3% to +8%
+        fObj.progress += Math.floor(Math.random() * 6) + 3;
       } else if (fObj.progress < 95) {
         fObj.progress += 1;
       }
@@ -676,12 +580,10 @@ async function uploadSingleFile(fObj, folderName) {
   try {
     startProgressSimulation();
     
-    // 1. Read file as Base64 in background
     const base64Data = await readFileAsBase64(fObj.file);
     fObj.progress = Math.max(fObj.progress, 30);
     updateProgressUI(fObj.id, fObj.progress);
     
-    // 2. Upload to Google Drive via server side RPC or CORS Fallback POST
     const result = await uploadToGoogleDrive({
       name: fObj.name,
       type: fObj.type,
@@ -700,42 +602,41 @@ async function uploadSingleFile(fObj, folderName) {
       fObj.status = 'error';
       fObj.progress = 0;
       fObj.errorMessage = result.error || 'Server upload failed';
-      showToast('Upload Error', `Failed to upload '${fObj.name}': ${fObj.errorMessage}`, 'danger', 6000);
+      window.showToast('Upload Error', `Failed to upload '${fObj.name}': ${fObj.errorMessage}`, 'danger', 6000);
     }
   } catch (err) {
     if (progressInterval) clearInterval(progressInterval);
     fObj.status = 'error';
     fObj.progress = 0;
     fObj.errorMessage = err.toString() || 'Client upload failed';
-    showToast('Connection Error', `Network issue uploading '${fObj.name}': ${fObj.errorMessage}`, 'danger', 6000);
+    window.showToast('Connection Error', `Network issue uploading '${fObj.name}': ${fObj.errorMessage}`, 'danger', 6000);
   }
 
   updateCardUI(fObj);
   updateOverallProgress();
 }
 
-// Concurrent Worker Pool Upload Controller
+// Master execution pool
 async function processAndUpload() {
   if (isUploading) return;
 
   const pendingFiles = selectedFiles.filter(f => f.status === 'pending' || f.status === 'error');
   if (pendingFiles.length === 0) {
-    showToast('Uploads Complete', 'No pending files left to upload.', 'info', 3000);
+    window.showToast('Uploads Complete', 'No pending files left to upload.', 'info', 3000);
     return;
   }
 
   isUploading = true;
   updateGlobalUIState();
-  showToast('Starting Uploads', `Uploading ${pendingFiles.length} file(s) to Google Drive.`, 'info', 3000);
+  window.showToast('Starting Uploads', `Uploading ${pendingFiles.length} file(s) to Google Drive.`, 'info', 3000);
 
-  const folderName = folderNameInput.value.trim();
-  const concurrencyLimit = parseInt(document.getElementById('uploadConcurrency').value) || 1;
+  const folderName = folderNameInput ? folderNameInput.value.trim() : '';
+  const concurrencyLimit = uploadConcurrency ? parseInt(uploadConcurrency.value) : 1;
 
   let queue = [...pendingFiles];
   let resolveAll;
   const allFinishedPromise = new Promise(resolve => resolveAll = resolve);
 
-  // Active concurrent runner loop
   function runNext() {
     if (queue.length === 0 && activeUploadsCount === 0) {
       resolveAll();
@@ -763,22 +664,19 @@ async function processAndUpload() {
   const errorList = selectedFiles.filter(f => f.status === 'error');
 
   if (errorList.length === 0) {
-    showToast('All Succeeded', `Successfully uploaded ${successList.length} files.`, 'success', 5000);
-    // Auto clear queue on success
+    window.showToast('All Succeeded', `Successfully uploaded ${successList.length} files.`, 'success', 5000);
     setTimeout(() => {
       if (!isUploading) {
         clearQueue();
-        folderNameInput.value = '';
-        updateClearFolderBtnVisibility();
+        if (folderNameInput) folderNameInput.value = '';
       }
     }, 3500);
   } else {
-    showToast('Finished with Errors', `Uploaded ${successList.length} files successfully. ${errorList.length} failed.`, 'warning', 6000);
-    renderFileList(); // Update to show error and retry buttons
+    window.showToast('Finished with Errors', `Uploaded ${successList.length} files successfully. ${errorList.length} failed.`, 'warning', 6000);
+    renderFileList();
   }
 }
 
-// Read raw file as Base64 helper
 function readFileAsBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -788,80 +686,28 @@ function readFileAsBase64(file) {
   });
 }
 
-// Google Apps Script client runner or Fallback fetch request
 function uploadToGoogleDrive(fileData, folderName) {
-  // If running inside Google Apps Script iframe environment
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    return new Promise((resolve, reject) => {
-      google.script.run
-        .withSuccessHandler(response => resolve(response))
-        .withFailureHandler(error => reject(error))
-        .uploadFile(fileData, folderName); 
-    });
-  } else {
-    // Fallback for static website hosting (CORS Simple POST request)
-    if (!WEB_APP_URL || WEB_APP_URL.trim() === "") {
-      return Promise.reject("Google Apps Script Web App URL is not configured. Please set the 'WEB_APP_URL' constant at the top of 'js/upload.js' to enable uploads.");
-    }
-    
-    // We send Content-Type text/plain to avoid OPTIONS preflight checks which GAS doesn't handle.
-    // The GAS doPost(e) method parses JSON.parse(e.postData.contents) successfully.
-    return fetch(WEB_APP_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
-      },
-      body: JSON.stringify({ fileData, folderName })
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response.json();
-    });
+  if (!WEB_APP_URL || WEB_APP_URL.trim() === "") {
+    return Promise.reject("Google Apps Script Web App URL is not configured.");
   }
-}
-
-// Toast Notification System
-function showToast(title, message, type = 'info', duration = 4000) {
-  const container = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-
-  let iconSvg = '';
-  if (type === 'success') {
-    iconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-  } else if (type === 'danger') {
-    iconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-  } else if (type === 'warning') {
-    iconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>`;
-  } else {
-    iconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-  }
-
-  toast.innerHTML = `
-    <div class="toast-icon">${iconSvg}</div>
-    <div class="toast-body">
-      <div class="toast-title">${title}</div>
-      <div class="toast-msg">${message}</div>
-    </div>
-    <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
-  `;
-
-  container.appendChild(toast);
   
-  // Trigger CSS slide-in
-  setTimeout(() => toast.classList.add('active'), 50);
-
-  // Auto cleanup
-  setTimeout(() => {
-    toast.classList.remove('active');
-    setTimeout(() => toast.remove(), 300);
-  }, duration);
+  return fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify({ fileData, folderName })
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.json();
+  });
 }
 
-// Lightbox Image Preview Modal System
-function openLightbox(fileId) {
+// Lightbox for image uploads inside Aether Drop
+function openLightboxImage(fileId) {
   const fObj = selectedFiles.find(f => f.id === fileId);
   if (!fObj || !fObj.thumbnailUrl) return;
 
@@ -869,10 +715,13 @@ function openLightbox(fileId) {
   const img = document.getElementById('lightboxImg');
   const caption = document.getElementById('lightboxCaption');
 
-  img.src = ''; // Clear image src initially
-  
+  if (!modal || !img) return;
+
+  img.src = '';
   img.onload = () => {
-    caption.innerText = `${fObj.name} (${formatBytes(fObj.size)} • ${img.naturalWidth}x${img.naturalHeight}px)`;
+    if (caption) {
+      caption.innerText = `${fObj.name} (${formatBytes(fObj.size)} • ${img.naturalWidth}x${img.naturalHeight}px)`;
+    }
   };
 
   img.src = fObj.thumbnailUrl;
@@ -880,25 +729,24 @@ function openLightbox(fileId) {
   setTimeout(() => modal.classList.add('active'), 10);
 }
 
-// Close Lightbox Image Modal
-function closeLightbox() {
+function closeLightboxImage() {
   const modal = document.getElementById('imageLightbox');
-  modal.classList.remove('active');
-  setTimeout(() => {
-    modal.style.display = 'none';
-  }, 300);
+  if (modal) {
+    modal.classList.remove('active');
+    setTimeout(() => {
+      modal.style.display = 'none';
+    }, 300);
+  }
 }
 
-// Close lightbox on backdrop click or close X
-document.getElementById('imageLightbox').addEventListener('click', (e) => {
-  if (e.target.id === 'imageLightbox' || e.target.classList.contains('lightbox-close')) {
-    closeLightbox();
-  }
-});
-
-// Close lightbox on Escape press
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    closeLightbox();
+// Bind lightbox actions globally
+document.addEventListener('DOMContentLoaded', () => {
+  const lightbox = document.getElementById('imageLightbox');
+  if (lightbox) {
+    lightbox.addEventListener('click', (e) => {
+      if (e.target.id === 'imageLightbox' || e.target.classList.contains('lightbox-close')) {
+        closeLightboxImage();
+      }
+    });
   }
 });
