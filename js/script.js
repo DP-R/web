@@ -76,8 +76,6 @@ function unlockWorkspace() {
   
   // Initialize SPA utilities once unlocked
   initSPA();
-  initClock();
-  startTypewriter();
   
   // Initialize uploader
   if (typeof initUploader === 'function') {
@@ -210,85 +208,7 @@ function openViewerNative() {
   }
 }
 
-// Clock Widgets Loops
-function initClock() {
-  const hourHand = document.querySelector('#liveclock .hand.hour');
-  const minHand = document.querySelector('#liveclock .hand.minute');
-  const secHand = document.querySelector('#liveclock .hand.second');
-  const digiClock = document.getElementById('digiclock');
-  const digiCal = document.getElementById('digical');
 
-  function updateTime() {
-    const now = new Date();
-    
-    // Digital clock values
-    let hrs = now.getHours();
-    let mins = now.getMinutes();
-    let secs = now.getSeconds();
-    const dayName = now.toDateString();
-
-    const ampm = hrs >= 12 ? 'PM' : 'AM';
-    hrs = hrs % 12;
-    hrs = hrs ? hrs : 12; // 0 hour should be 12
-    
-    const displayHrs = hrs < 10 ? '0' + hrs : hrs;
-    const displayMins = mins < 10 ? '0' + mins : mins;
-    const displaySecs = secs < 10 ? '0' + secs : secs;
-
-    if (digiClock) {
-      digiClock.innerHTML = `${displayHrs}:${displayMins}<div id="millisec">${displaySecs}</div>`;
-    }
-    if (digiCal) {
-      digiCal.innerText = `${dayName}`;
-    }
-
-    // Analog clock values
-    const hourDeg = (now.getHours() + now.getMinutes() / 60) / 12 * 360;
-    const minDeg = now.getMinutes() / 60 * 360;
-    const secDeg = (now.getSeconds() + now.getMilliseconds() / 1000) / 60 * 360;
-
-    if (hourHand) hourHand.style.transform = `rotate(${hourDeg}deg)`;
-    if (minHand) minHand.style.transform = `rotate(${minDeg}deg)`;
-    if (secHand) secHand.style.transform = `rotate(${secDeg}deg)`;
-
-    requestAnimationFrame(updateTime);
-  }
-
-  requestAnimationFrame(updateTime);
-}
-
-// Typewriter Intro text
-let typeIndex = 0;
-const typewriterText = "I'm Purnendra";
-const typewriterSpeed = 150;
-
-function startTypewriter() {
-  const container = document.getElementById('demo');
-  if (!container) return;
-  container.innerHTML = '';
-  typeIndex = 0;
-  runTypewriter();
-}
-
-function runTypewriter() {
-  const container = document.getElementById('demo');
-  if (typeIndex < typewriterText.length) {
-    container.innerHTML += typewriterText.charAt(typeIndex);
-    typeIndex++;
-    setTimeout(runTypewriter, typewriterSpeed);
-  }
-}
-
-// Secret Easter Egg click loop
-let clickCount = 0;
-function triggerEasterEgg() {
-  clickCount++;
-  if (clickCount === 5) {
-    window.open("https://docs.google.com/spreadsheets/d/1c1QwvQsgA6V_1HNO9VrLc6PD5knGzLkCogt2KvXNzt4/edit#gid=59662764", "_blank");
-    clickCount = 0;
-    window.showToast('Easter Egg Unlocked', 'Opening secret sheet...', 'success', 2000);
-  }
-}
 
 // Global page load initial focus
 window.addEventListener('DOMContentLoaded', () => {

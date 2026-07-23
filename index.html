@@ -91,29 +91,23 @@
       </div>
       
       <nav class="sidebar-nav">
-        <button class="nav-item active" data-tab="dashboardView">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-          </svg>
-          Dashboard
-        </button>
-        <button class="nav-item" data-tab="portalView">
+        <button class="nav-item active" data-tab="portalView">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
           Workspace Portal
-        </button>
-        <button class="nav-item" data-tab="uploadView">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
-          Aether Drop
         </button>
         <button class="nav-item" data-tab="searchView">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           Database Search
+        </button>
+        <button class="nav-item" data-tab="uploadView">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          Aether Drop
         </button>
       </nav>
       
@@ -135,105 +129,9 @@
     <main class="main-content">
       
       <!-- ============================================================================
-           TAB 1: IIT MADRAS DASHBOARD
-           ============================================================================ -->
-      <section id="dashboardView" class="tab-view active">
-        <div class="view-header">
-          <h2>IIT Madras Workspace</h2>
-          <p>System clock, schedule overview, and direct interactive spreadsheets</p>
-        </div>
-        
-        <div class="dashboard-grid">
-          
-          <div class="widget-row">
-            <!-- Left panel: Analog & Digital Clocks -->
-            <div class="card clock-widget">
-              <div class="intro-text-container">
-                <div id="demo"></div>
-                <div class="sub-tagline">IIT Madras</div>
-              </div>
-              
-              <!-- Analog clock -->
-              <div class="analog-clock-container">
-                <div id="liveclock" class="outer_face">
-                  <div class="marker oneseven"></div>
-                  <div class="marker twoeight"></div>
-                  <div class="marker fourten"></div>
-                  <div class="marker fiveeleven"></div>
-                  <div class="inner_face">
-                    <div class="hand hour"></div>
-                    <div class="hand minute"></div>
-                    <div class="hand second"></div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Digital time & date -->
-              <div class="digital-clock-container">
-                <div id="digiclock">--:--<div id="millisec">--</div></div>
-                <div id="digical">------------</div>
-              </div>
-            </div>
-            
-            <!-- Right panel: Document Tab Viewer -->
-            <div class="card workspace-embed-widget">
-              <div class="embed-tabs-bar">
-                <button class="embed-tab-btn active" data-embed="excelPane">Excel</button>
-                <button class="embed-tab-btn" data-embed="wordPane">Word</button>
-                <button class="embed-tab-btn" data-embed="pptPane">PPT</button>
-                <button class="embed-tab-btn" data-embed="timetablePane">Timetable</button>
-              </div>
-              
-              <div class="embed-content-container">
-                <div id="excelPane" class="embed-pane active">
-                  <iframe src="" data-src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQbFzquFuhk1LecpwhWmsSGoOw1HuLS9q_kjqrdRMB1-CSuQWCsKcPa016YLJm_hGNgty9Uh1OV-i_s/pubhtml?widget=true&amp;headers=false&chrome=false"></iframe>
-                  <div class="embed-pane-footer">
-                    <button class="embed-action-btn" onclick="openWorkspaceLink('https://docs.google.com/spreadsheets/d/e/2PACX-1vQbFzquFuhk1LecpwhWmsSGoOw1HuLS9q_kjqrdRMB1-CSuQWCsKcPa016YLJm_hGNgty9Uh1OV-i_s/pubhtml?widget=true&amp;headers=false&chrome=false', 'Excel Sheet', 'sheet')">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px; height:12px;"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg> Expand
-                    </button>
-                  </div>
-                </div>
-                
-                <div id="wordPane" class="embed-pane">
-                  <iframe src="" data-src="https://docs.google.com/document/d/e/2PACX-1vRwPd9NfoJ9vcpukj-avElt4m8mVJ2z5hJMtr06b0dBkOnokwzPIv8_XLYzjJUUPzwY3Lzq2imZNR4R/pub?embedded=true"></iframe>
-                  <div class="embed-pane-footer">
-                    <button class="embed-action-btn" onclick="openWorkspaceLink('https://docs.google.com/document/d/e/2PACX-1vRwPd9NfoJ9vcpukj-avElt4m8mVJ2z5hJMtr06b0dBkOnokwzPIv8_XLYzjJUUPzwY3Lzq2imZNR4R/pub?embedded=true', 'Word Document')">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px; height:12px;"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg> Expand
-                    </button>
-                  </div>
-                </div>
-                
-                <div id="pptPane" class="embed-pane">
-                  <iframe src="" data-src="https://docs.google.com/presentation/d/e/2PACX-1vSqfYPemut7OMkFShdqQ3BqhjAiT7p50j-j-tDHgm0X0hxSnClxuRq0Xbi4cRaZtNiXw4pa_UIlux9G/embed?start=true&loop=true&delayms=3000" allowfullscreen="true"></iframe>
-                  <div class="embed-pane-footer">
-                    <button class="embed-action-btn" onclick="openWorkspaceLink('https://docs.google.com/presentation/d/e/2PACX-1vSqfYPemut7OMkFShdqQ3BqhjAiT7p50j-j-tDHgm0X0hxSnClxuRq0Xbi4cRaZtNiXw4pa_UIlux9G/embed?start=true&loop=true&delayms=3000', 'PPT Slide Presentation')">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px; height:12px;"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg> Expand
-                    </button>
-                  </div>
-                </div>
-                
-                <div id="timetablePane" class="embed-pane">
-                  <div class="timetable-img-wrapper">
-                    <img src="images/time table.png" alt="Timetable">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Mountain Easter egg -->
-          <div class="mountain-decorator" onclick="triggerEasterEgg()">
-            <img class="mountain-bg" src="images/mountain.png" alt="Mountain Decorator">
-            <span>Click to explore</span>
-          </div>
-          
-        </div>
-      </section>
-
-      <!-- ============================================================================
            TAB 2: WORKSPACE PORTAL (Quick Launch Links)
-           ============================================================================ */
-      <section id="portalView" class="tab-view">
+           ============================================================================ -->
+      <section id="portalView" class="tab-view active">
         <div class="view-header">
           <h2>Workspace Portal</h2>
           <p>Quick access to files, sheets, and documents in secure workspaces</p>
@@ -289,86 +187,6 @@
               <div class="link-card-info">
                 <span class="link-card-name">Drive Upload</span>
                 <span class="link-card-desc">Apps Script Upload Form</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Cloud Storage links -->
-          <h3 class="portal-section-title">Cloud Storage</h3>
-          <div class="link-grid">
-            <div class="link-card" onclick="openWorkspaceLink('https://www.dropbox.com/scl/fo/ze4hj5xfsj6npvfidbhdp/AA7GA3iVX3FzqtpMJkqqFRM?rlkey=7qs1bz4fy1a5d4fnt7iypy1t6&st=yro08aw0&dl=0', 'Dropbox Folder', 'drive')">
-              <div class="link-card-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <div class="link-card-info">
-                <span class="link-card-name">Dropbox Folder</span>
-                <span class="link-card-desc">Main Backup Directory</span>
-              </div>
-            </div>
-
-            <div class="link-card" onclick="openWorkspaceLink('https://www.dropbox.com/scl/fo/zcngb0qsa62qizacfds85/AAWbk-LL-eyCPKsl3vlmbl0?rlkey=bcqwfwewnsc6w578k99272alw&st=zx2vfias&dl=0', 'Dropbox Office Folder', 'drive')">
-              <div class="link-card-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <div class="link-card-info">
-                <span class="link-card-name">Dropbox Office</span>
-                <span class="link-card-desc">Office Files Backup</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sports & Games rules/scoreboards -->
-          <h3 class="portal-section-title">Sports & Games</h3>
-          <div class="link-grid sports-theme">
-            <div class="link-card" onclick="openWorkspaceLink('https://docs.google.com/document/d/1dGSRq70Z7ro26EzA3EEWZliA6s8aSwM1aDsZXvbr8MM/edit?usp=sharing', 'Chess Rules & Specifications')">
-              <div class="link-card-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <div class="link-card-info">
-                <span class="link-card-name">Rules for Chess</span>
-                <span class="link-card-desc">FIDE Guidelines & Game Setup</span>
-              </div>
-            </div>
-
-            <div class="link-card" onclick="openWorkspaceLink('https://docs.google.com/document/d/1aXeMmum7bttIPqRDLWGkco4M5h2a0SrFvGqxEz3epIs/edit?usp=sharing', 'Carrom Rules & Setup')">
-              <div class="link-card-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <div class="link-card-info">
-                <span class="link-card-name">Rules for Carroms</span>
-                <span class="link-card-desc">Scoring Guidelines & Regulations</span>
-              </div>
-            </div>
-
-            <div class="link-card" onclick="openWorkspaceLink('https://docs.google.com/document/d/1Xb7N_oXQhsR9axEa4VIaZufpTaXimGMuWAGn_4OyN9o/edit?usp=sharing', 'Table Tennis Rules')">
-              <div class="link-card-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <div class="link-card-info">
-                <span class="link-card-name">Rules for TT</span>
-                <span class="link-card-desc">ITTF Table Tennis Laws</span>
-              </div>
-            </div>
-
-            <div class="link-card" onclick="openWorkspaceLink('https://docs.google.com/spreadsheets/d/1DvizAqEHL0B7wPn9ZgblxPzTdPrWOY6D8yKFaNbskms/edit?usp=sharing', 'Sports Scoreboard Spreadsheets', 'sheet')">
-              <div class="link-card-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div class="link-card-info">
-                <span class="link-card-name">Scoreboard</span>
-                <span class="link-card-desc">Interactive Scores Sheet</span>
               </div>
             </div>
           </div>
