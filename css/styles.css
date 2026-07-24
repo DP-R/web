@@ -2180,3 +2180,9 @@ mark {
     color: var(--accent-cargo);
   }
 }
+
+.recent-file-item:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: var(--border-color-hover) !important;
+  transform: translateY(-1px);
+}

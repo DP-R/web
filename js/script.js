@@ -87,6 +87,9 @@ function unlockWorkspace() {
 
   // Initialize Flight Schedule
   initFlightSchedule();
+
+  // Load recently modified files list in the background
+  loadRecentFiles();
   
   window.showToast('Authorized', 'Workspace unlocked successfully.', 'success', 2500);
 }
@@ -628,21 +631,16 @@ function renderFlightSchedule() {
   if (cargoCountEl) cargoCountEl.innerText = cargoCount;
 }
 
-// Bulk download recently updated files from Google Drive
-async function downloadRecentFiles() {
-  const btn = document.getElementById('bulkDownloadBtn');
-  if (!btn) return;
-  const originalHtml = btn.innerHTML;
-  
-  btn.disabled = true;
-  btn.innerHTML = `
-    <svg class="animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 15px; height: 15px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle;">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-    </svg>
-    Fetching files...
-  `;
+// Bulk download all recently modified files from Google Drive
+let cachedRecentFiles = [];
 
-  showToast('📥 Contacting Drive API...', 'info', 3000);
+// Load the 5 most recently modified files from Google Drive
+async function loadRecentFiles() {
+  const container = document.getElementById('recentFilesContainer');
+  const loader = document.getElementById('recentFilesLoader');
+  const bulkBtn = document.getElementById('bulkDownloadBtn');
+  
+  if (bulkBtn) bulkBtn.disabled = true;
 
   try {
     const res = await fetch(SEARCH_WEB_APP_URL, {
@@ -655,47 +653,133 @@ async function downloadRecentFiles() {
     const data = await res.json();
 
     if (!data.success) throw new Error(data.error || 'Server error');
-    const files = data.files || [];
-
-    if (files.length === 0) {
-      showToast('⚠️ No files found in directory.', 'warning', 4000);
-      btn.disabled = false;
-      btn.innerHTML = originalHtml;
-      return;
+    
+    cachedRecentFiles = data.files || [];
+    
+    if (loader) loader.style.display = 'none';
+    renderRecentFiles(cachedRecentFiles);
+    
+    if (bulkBtn && cachedRecentFiles.length > 0) {
+      bulkBtn.disabled = false;
     }
-
-    showToast(`📥 Starting bulk download of ${files.length} file(s)...`, 'info', 4000);
-
-    // Download files sequentially with a delay to prevent browser blockages
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      
-      // Delay downloads to keep them separate and avoid popup blockers
-      await new Promise(resolve => setTimeout(resolve, i === 0 ? 0 : 700));
-      
-      showToast(`💾 Downloading: ${file.name}`, 'info', 2000);
-
-      if (file.isGoogleType) {
-        // For Google files (Docs/Sheets), open them in a new tab
-        window.open(file.downloadUrl, '_blank');
-      } else {
-        // For binary files, trigger direct download
-        const a = document.createElement('a');
-        a.href = file.downloadUrl;
-        a.download = file.name;
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
-    }
-
-    showToast('✅ All downloads initialized successfully!', 'success', 5000);
   } catch (err) {
-    console.error('Bulk download failed:', err);
-    showToast(`❌ Bulk download failed: ${err.message}`, 'danger', 6000);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = originalHtml;
+    console.error('Failed to load recent files:', err);
+    if (container) {
+      container.innerHTML = `
+        <div style="color: var(--color-danger); font-size: 13px; padding: 12px 0;">
+          ❌ Error loading recent files: ${err.message}
+        </div>
+      `;
+    }
   }
+}
+
+// Render files list in the UI
+function renderRecentFiles(files) {
+  const container = document.getElementById('recentFilesContainer');
+  if (!container) return;
+  
+  if (files.length === 0) {
+    container.innerHTML = `
+      <div style="color: var(--text-muted); font-size: 13px; padding: 12px 0;">
+        No recently modified files found.
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = files.map(file => {
+    let iconSvg = '';
+    // Select icon based on file type
+    if (file.mime.includes('spreadsheet') || file.mime.includes('excel')) {
+      iconSvg = `<svg style="color: #107c41; width: 16px; height: 16px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`;
+    } else if (file.mime.includes('document') || file.mime.includes('word') || file.mime.includes('text')) {
+      iconSvg = `<svg style="color: #2b579a; width: 16px; height: 16px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`;
+    } else if (file.mime.includes('pdf')) {
+      iconSvg = `<svg style="color: #ff3333; width: 16px; height: 16px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`;
+    } else if (file.mime.includes('image')) {
+      iconSvg = `<svg style="color: #3b82f6; width: 16px; height: 16px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
+    } else {
+      iconSvg = `<svg style="color: var(--text-muted); width: 16px; height: 16px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`;
+    }
+    
+    const timeStr = formatRelativeTime(file.lastUpdated);
+    const downloadAction = file.isGoogleType ? `window.open('${file.downloadUrl}', '_blank')` : `triggerIndividualDownload('${file.downloadUrl}', '${file.name.replace(/'/g, "\\'")}')`;
+    
+    return `
+      <div class="recent-file-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.01); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); transition: all 0.2s ease;">
+        <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; cursor: pointer; flex-grow: 1;" onclick="${downloadAction}">
+          ${iconSvg}
+          <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left;">
+            <span style="font-size: 13px; font-weight: 500; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${file.name}</span>
+            <span style="font-size: 11px; color: var(--text-muted);">${timeStr}</span>
+          </div>
+        </div>
+        
+        <button onclick="${downloadAction}" class="text-btn" style="color: var(--color-primary); padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: var(--border-radius-sm); transition: all 0.2s ease; cursor: pointer; background: transparent; border: none;" title="Download File">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 15px; height: 15px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+// Relative time calculator
+function formatRelativeTime(timestamp) {
+  const diff = Date.now() - timestamp;
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+  
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
+}
+
+// Download individual file
+function triggerIndividualDownload(url, filename) {
+  window.showToast('Downloading File', `💾 Starting download for ${filename}`, 'info', 2000);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// Bulk download all recently modified files
+async function downloadRecentFiles() {
+  if (cachedRecentFiles.length === 0) return;
+  
+  const btn = document.getElementById('bulkDownloadBtn');
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `Downloading...`;
+  
+  window.showToast('Bulk Download', `📥 Downloading ${cachedRecentFiles.length} file(s)...`, 'info', 3000);
+  
+  for (let i = 0; i < cachedRecentFiles.length; i++) {
+    const file = cachedRecentFiles[i];
+    await new Promise(resolve => setTimeout(resolve, i === 0 ? 0 : 700));
+    
+    if (file.isGoogleType) {
+      window.open(file.downloadUrl, '_blank');
+    } else {
+      const a = document.createElement('a');
+      a.href = file.downloadUrl;
+      a.download = file.name;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  }
+  
+  btn.disabled = false;
+  btn.innerHTML = originalHtml;
+  window.showToast('Bulk Download Complete', '✅ All downloads initialized successfully!', 'success', 3500);
 }
