@@ -561,8 +561,6 @@ function renderFlightSchedule() {
     tr.innerHTML = `
       <td><span class="time-arr">${row.arrTime}</span></td>
       <td><span class="time-dep">${row.depTime}</span></td>
-      <td><span class="source-tag">🛫 ${row.source}</span></td>
-      <td><span class="dest-tag">🛬 ${row.dest}</span></td>
       <td>
         <div class="flight-pair-box">
           <span class="flight-no-arr">🛬 ${row.arrNo}</span>
@@ -601,8 +599,7 @@ function renderFlightSchedule() {
         </div>
       </div>
       <div class="card-route-row">
-        <span class="route-pill-in">🛫 From: ${row.source}</span>
-        <span class="route-pill-out">🛬 To: ${row.dest}</span>
+        <span class="route-pill-in">🗺️ Route: ${row.route}</span>
       </div>
       <div class="flight-pairs-row">
         <span style="color: ${row.isCargo ? 'var(--accent-cargo, #f97316)' : 'var(--accent-green, #34d399)'};">🛬 Inbound: ${row.arrNo}</span>
