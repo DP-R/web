@@ -55,10 +55,12 @@ function initUploader() {
     e.target.value = ''; // Reset input
   });
 
-  // Drag and Drop counter pattern
+  // Drag and Drop counter pattern (isolated to Aether Drop tab only)
   let dragCounter = 0;
   window.addEventListener('dragenter', (e) => {
     e.preventDefault();
+    const uploadView = document.getElementById('uploadView');
+    if (!uploadView || !uploadView.classList.contains('active')) return;
     if (isUploading || !document.getElementById('app-layout').classList.contains('unlocked')) return;
     dragCounter++;
     if (dragCounter === 1) {
@@ -68,6 +70,8 @@ function initUploader() {
 
   window.addEventListener('dragleave', (e) => {
     e.preventDefault();
+    const uploadView = document.getElementById('uploadView');
+    if (!uploadView || !uploadView.classList.contains('active')) return;
     if (isUploading || !document.getElementById('app-layout').classList.contains('unlocked')) return;
     dragCounter--;
     if (dragCounter === 0) {
@@ -81,6 +85,8 @@ function initUploader() {
 
   window.addEventListener('drop', (e) => {
     e.preventDefault();
+    const uploadView = document.getElementById('uploadView');
+    if (!uploadView || !uploadView.classList.contains('active')) return;
     if (isUploading || !document.getElementById('app-layout').classList.contains('unlocked')) return;
     dragCounter = 0;
     document.getElementById('pageDragOverlay').classList.remove('active');

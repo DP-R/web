@@ -356,43 +356,107 @@
            ============================================================================ -->
       <section id="flightView" class="tab-view">
         <div class="view-header">
-          <h2>Chennai International Flight Schedule</h2>
-          <p>Direct international flight arrivals and routing patterns at Chennai Airport (MAA)</p>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px;">
+            <span class="badge-customs" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 20px; text-transform: uppercase;">MAA Courier Cell</span>
+            <h2 style="margin: 0; display: inline-block;">Chennai Flights & Cargo Schedule</h2>
+          </div>
+          <p>Master 24-Hour Timeline (Sorted by Arrival Time 00:00 ➔ 23:59 IST)</p>
         </div>
 
-        <div class="flight-dashboard">
-          <div class="card filter-card" style="margin-bottom: 24px;">
-            <div class="search-controls">
-              <select id="flightAirlineFilter" title="Filter by Airline">
-                <option value="all">All Airlines</option>
-                <option value="Emirates">Emirates</option>
-                <option value="IndiGo">IndiGo</option>
-                <option value="Singapore Airlines">Singapore Airlines</option>
-                <option value="AirAsia">AirAsia</option>
-                <option value="Malaysia Airlines">Malaysia Airlines</option>
-                <option value="SriLankan Airlines">SriLankan Airlines</option>
-                <option value="Thai Airways">Thai Airways</option>
-                <option value="Scoot">Scoot</option>
-              </select>
-              <input type="text" id="flightSearchInput" placeholder="Search by Flight No or Origin (e.g. Dubai, Singapore)...">
+        <!-- Vibrant Stats Bar -->
+        <div class="stats-bar">
+          <div class="stat-card">
+            <div class="stat-val" id="total-rows">0</div>
+            <div class="stat-lbl">Flights Total</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="passenger-count" style="color: var(--accent-green, #34d399);">0</div>
+            <div class="stat-lbl">Passenger Flights</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="cargo-count" style="color: var(--accent-cargo, #f97316);">0</div>
+            <div class="stat-lbl">Cargo Freighters</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" style="color: var(--accent-purple, #c084fc);">24 hrs</div>
+            <div class="stat-lbl">Timeline View</div>
+          </div>
+        </div>
+
+        <!-- Collapsible Controls Panel -->
+        <div class="controls-panel" id="controls-panel">
+          <div class="controls-header-toggle" id="controls-header-toggle">
+            <div class="controls-title-group">
+              <span class="controls-title-text">⚡ Search & Filters</span>
+              <span class="active-filter-badge" id="filter-badge">All Flights</span>
             </div>
+            <button class="toggle-button" type="button">
+              <span id="toggle-text">Minimize</span>
+              <span class="toggle-icon-arrow">▲</span>
+            </button>
           </div>
 
-          <!-- Flights Table Card -->
-          <div class="card" style="overflow-x: auto;">
+          <div class="controls-body" id="controls-body">
+            <div class="filter-group">
+              <label>Search Flight / Airline / Code</label>
+              <input type="text" id="search-input" placeholder="e.g. BKK, DXB, CX2033, LH Cargo...">
+            </div>
+
+            <div class="filter-group">
+              <label>Flight Type</label>
+              <select id="type-filter">
+                <option value="all">All Flights (Pax & Cargo)</option>
+                <option value="passenger">Passenger Flights Only</option>
+                <option value="cargo">Cargo Freighters Only</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label>Shift Filter</label>
+              <select id="shift-filter">
+                <option value="all">All Shifts (24 Hours)</option>
+                <option value="shift-a">Shift A (00:00 - 08:00 IST)</option>
+                <option value="shift-b">Shift B (08:00 - 16:00 IST)</option>
+                <option value="shift-c">Shift C (16:00 - 00:00 IST)</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label>Frequency Filter</label>
+              <select id="freq-filter">
+                <option value="all">All Flights (Daily & Periodic)</option>
+                <option value="daily">Daily Flights Only</option>
+                <option value="periodic">Periodic Flights Only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Cards View (< 768px) -->
+        <div class="mobile-cards-container" id="mobile-cards-body"></div>
+
+        <!-- Desktop Table View (≥ 768px) -->
+        <div class="desktop-table-block">
+          <div class="table-title-bar">
+            <span>⏱️ Master Schedule (Source ➔ Chennai (MAA) ➔ Destination)</span>
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: normal;">Combined Turnaround Pairs</span>
+          </div>
+          <div style="overflow-x: auto;">
             <table class="flight-table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
               <thead>
-                <tr style="border-bottom: 1.5px solid var(--border-color); text-align: left;">
-                  <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Flight Info</th>
-                  <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Origin</th>
-                  <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">ETA (Local Time)</th>
-                  <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Frequency</th>
-                  <th style="padding: 12px 8px; color: var(--text-secondary); font-weight: 600;">Status</th>
+                <tr>
+                  <th>Arr Time (IST)</th>
+                  <th>Dep Time (IST)</th>
+                  <th>Source (Before MAA)</th>
+                  <th>Destination (After MAA)</th>
+                  <th>Flight Pair (In / Out)</th>
+                  <th>Airline</th>
+                  <th>Operating Days</th>
+                  <th>Aircraft</th>
+                  <th>Airports Touched (Route)</th>
                 </tr>
               </thead>
-              <tbody id="flightsTableBody">
-                <!-- Dynamic rows go here -->
-              </tbody>
+              <tbody id="desktop-table-body"></tbody>
             </table>
           </div>
         </div>
