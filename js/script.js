@@ -5,12 +5,14 @@
 const SEARCH_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzU2WaguCdpzQAxsT9V1GU-isBN5MOiSjkJng_SFflfqSFagrMnGiXgFEd35roed7Ee/exec";
 
 
-// Register Progressive Web App Service Worker
+// Proactively unregister any active service workers to prevent stale PWA caching issues during updates
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(reg => console.log('[PWA] Service Worker registered successfully', reg.scope))
-      .catch(err => console.error('[PWA] Service Worker registration failed', err));
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (const registration of registrations) {
+      registration.unregister().then(() => {
+        console.log('[PWA] Service Worker unregistered successfully to ensure fresh asset delivery.');
+      });
+    }
   });
 }
 
