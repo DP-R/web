@@ -185,6 +185,22 @@
             </div>
           </div>
 
+          <!-- Bulk Actions -->
+          <h3 class="portal-section-title" style="margin-top: 40px;">Bulk Actions</h3>
+          <div class="actions-container" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 24px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <h4 style="margin: 0; font-size: 15px; font-weight: 600; color: #fff;">Download Recent Uploads</h4>
+              <p style="margin: 0; font-size: 12px; color: var(--text-muted);">Fetch and download the 5 most recently modified files directly as individual files</p>
+            </div>
+            
+            <button id="bulkDownloadBtn" class="btn btn-primary" onclick="downloadRecentFiles()" style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 15px; height: 15px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Bulk Download Recent Files
+            </button>
+          </div>
+
         </div>
       </section>
 

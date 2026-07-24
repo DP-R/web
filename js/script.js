@@ -627,3 +627,75 @@ function renderFlightSchedule() {
   if (passengerCountEl) passengerCountEl.innerText = paxCount;
   if (cargoCountEl) cargoCountEl.innerText = cargoCount;
 }
+
+// Bulk download recently updated files from Google Drive
+async function downloadRecentFiles() {
+  const btn = document.getElementById('bulkDownloadBtn');
+  if (!btn) return;
+  const originalHtml = btn.innerHTML;
+  
+  btn.disabled = true;
+  btn.innerHTML = `
+    <svg class="animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 15px; height: 15px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle;">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+    </svg>
+    Fetching files...
+  `;
+
+  showToast('📥 Contacting Drive API...', 'info', 3000);
+
+  try {
+    const res = await fetch(SEARCH_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'getRecentFiles', limit: 5 })
+    });
+
+    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.error || 'Server error');
+    const files = data.files || [];
+
+    if (files.length === 0) {
+      showToast('⚠️ No files found in directory.', 'warning', 4000);
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+      return;
+    }
+
+    showToast(`📥 Starting bulk download of ${files.length} file(s)...`, 'info', 4000);
+
+    // Download files sequentially with a delay to prevent browser blockages
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Delay downloads to keep them separate and avoid popup blockers
+      await new Promise(resolve => setTimeout(resolve, i === 0 ? 0 : 700));
+      
+      showToast(`💾 Downloading: ${file.name}`, 'info', 2000);
+
+      if (file.isGoogleType) {
+        // For Google files (Docs/Sheets), open them in a new tab
+        window.open(file.downloadUrl, '_blank');
+      } else {
+        // For binary files, trigger direct download
+        const a = document.createElement('a');
+        a.href = file.downloadUrl;
+        a.download = file.name;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    }
+
+    showToast('✅ All downloads initialized successfully!', 'success', 5000);
+  } catch (err) {
+    console.error('Bulk download failed:', err);
+    showToast(`❌ Bulk download failed: ${err.message}`, 'danger', 6000);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+}
