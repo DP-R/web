@@ -2,7 +2,7 @@
    Secure Access Workspace - Main Application Javascript
    ============================================================================ */
 
-const SEARCH_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzKo4Gyc25d3Qgo_9mEq9ySTu4HdSInZDmVt8nGl6zKqEoguxDopE03vprhw2pB7gTi/exec";
+const SEARCH_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzU2WaguCdpzQAxsT9V1GU-isBN5MOiSjkJng_SFflfqSFagrMnGiXgFEd35roed7Ee/exec";
 
 
 // Register Progressive Web App Service Worker
@@ -164,6 +164,10 @@ function loadEmbedIframe(paneId) {
 
 // Integrated Workspace Viewer Controller
 function openWorkspaceLink(url, title, type = 'document') {
+  if (type === 'drive') {
+    window.open(url, '_blank');
+    return;
+  }
   const viewer = document.getElementById('workspace-viewer');
   const iframe = document.getElementById('viewer-iframe');
   const viewerTitle = document.getElementById('viewer-title');
