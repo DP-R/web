@@ -66,8 +66,9 @@
       <h2>System Access</h2>
       <p>Please enter authorization passcode:</p>
       
-      <div class="auth-input-wrapper">
-        <input type="password" id="password-input" class="auth-input" placeholder="[ passcode ]" autofocus onkeypress="handleAuthInput(event)">
+      <div class="auth-input-wrapper" style="display: flex; gap: 8px; width: 100%;">
+        <input type="password" id="password-input" class="auth-input" placeholder="[ passcode ]" autofocus onkeydown="handleAuthInput(event)" style="flex-grow: 1;">
+        <button onclick="submitAuth()" class="btn btn-primary" style="padding: 10px 20px; font-weight: 600; flex-shrink: 0;">Unlock</button>
       </div>
       
       <div id="error-msg" class="auth-error">ERROR: ACCESS DENIED</div>

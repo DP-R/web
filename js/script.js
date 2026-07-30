@@ -57,17 +57,26 @@ window.showToast = function(title, message, type = 'info', duration = 4000) {
 const AUTH_KEY = 'secure_portal_auth_timestamp';
 let isAuthenticated = false;
 
-function handleAuthInput(event) {
-  if (event.key === 'Enter') {
-    const input = document.getElementById('password-input').value;
-    if (input === ' ') {
-      unlockWorkspace();
-    } else {
-      const errMsg = document.getElementById('error-msg');
+function submitAuth() {
+  const inputEl = document.getElementById('password-input');
+  if (!inputEl) return;
+  const input = inputEl.value;
+  // Accept single space ' ' or whitespace passcode
+  if (input === ' ' || (input.length > 0 && input.trim() === '')) {
+    unlockWorkspace();
+  } else {
+    const errMsg = document.getElementById('error-msg');
+    if (errMsg) {
       errMsg.classList.add('visible');
       setTimeout(() => errMsg.classList.remove('visible'), 3000);
-      document.getElementById('password-input').value = '';
     }
+    inputEl.value = '';
+  }
+}
+
+function handleAuthInput(event) {
+  if (event.key === 'Enter') {
+    submitAuth();
   }
 }
 
