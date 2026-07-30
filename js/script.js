@@ -697,7 +697,6 @@ function renderRecentFiles(items) {
 
     if (item.isFolder) {
       const openFolderAction = `window.open('${item.driveUrl}', '_blank')`;
-      const downloadFolderAction = `downloadFolderFiles('${item.id}')`;
       
       return `
         <div class="recent-file-item recent-folder-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--border-radius-sm); transition: all 0.2s ease;">
@@ -709,11 +708,11 @@ function renderRecentFiles(items) {
             </div>
           </div>
           
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <button onclick="${openFolderAction}" class="text-btn" style="color: #fbbf24; padding: 5px 10px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 4px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); border-radius: 4px; cursor: pointer;" title="Open folder in Google Drive">
+          <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+            <button onclick="event.stopPropagation(); ${openFolderAction}" class="text-btn" style="color: #fbbf24; padding: 5px 10px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 4px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); border-radius: 4px; cursor: pointer;" title="Open folder in Google Drive">
               ↗ Open
             </button>
-            <button onclick="${downloadFolderAction}" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;" title="Download all files in this folder">
+            <button onclick="event.stopPropagation(); downloadFolderFiles('${item.id}', this)" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; cursor: pointer;" title="Download all files in this folder">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 13px; height: 13px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
@@ -751,7 +750,7 @@ function renderRecentFiles(items) {
           </div>
         </div>
         
-        <button onclick="${downloadAction}" class="text-btn" style="color: var(--color-primary); padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: var(--border-radius-sm); transition: all 0.2s ease; cursor: pointer; background: transparent; border: none;" title="Download File">
+        <button onclick="event.stopPropagation(); ${downloadAction}" class="text-btn" style="color: var(--color-primary); padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: var(--border-radius-sm); transition: all 0.2s ease; cursor: pointer; background: transparent; border: none;" title="Download File">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 15px; height: 15px;">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>
@@ -762,9 +761,16 @@ function renderRecentFiles(items) {
 }
 
 // Clean & Fast Single Zip Downloader for Folders
-async function downloadFolderFiles(folderId) {
+async function downloadFolderFiles(folderId, btnEl) {
   const folder = cachedRecentFiles.find(item => item.id === folderId);
   const folderName = folder ? folder.name : 'Folder';
+  
+  let origText = '';
+  if (btnEl) {
+    origText = btnEl.innerHTML;
+    btnEl.disabled = true;
+    btnEl.innerHTML = `⌛ Zipping...`;
+  }
   
   window.showToast('Zipping Folder', `📦 Packaging "${folderName}" into ${folderName}.zip...`, 'info', 4000);
   
@@ -791,6 +797,11 @@ async function downloadFolderFiles(folderId) {
   } catch (err) {
     console.error('Folder zip error:', err);
     window.showToast('Zip Error', `❌ Could not download zip for ${folderName}: ${err.message}`, 'danger', 4000);
+  } finally {
+    if (btnEl) {
+      btnEl.disabled = false;
+      btnEl.innerHTML = origText;
+    }
   }
 }
 
