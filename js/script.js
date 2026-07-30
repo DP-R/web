@@ -658,55 +658,74 @@ async function loadRecentFiles() {
       bulkBtn.disabled = false;
     }
   } catch (err) {
-    console.error('Failed to load recent files:', err);
-    if (container) {
-      container.innerHTML = `
-        <div style="color: var(--color-danger); font-size: 13px; padding: 12px 0;">
-          ❌ Error loading recent files: ${err.message}
-        </div>
-      `;
-    }
-  }
-}
-
-// Render files list in the UI
-function renderRecentFiles(files) {
+    console.error('Failed t// Render files & subfolders list in the UI
+function renderRecentFiles(items) {
   const container = document.getElementById('recentFilesContainer');
   if (!container) return;
   
-  if (files.length === 0) {
+  if (items.length === 0) {
     container.innerHTML = `
       <div style="color: var(--text-muted); font-size: 13px; padding: 12px 0;">
-        No recently modified files found.
+        No recently modified folders or files found in the last hour.
       </div>
     `;
     return;
   }
   
-  container.innerHTML = files.map(file => {
+  container.innerHTML = items.map(item => {
+    const timeStr = formatRelativeTime(item.lastUpdated);
+
+    if (item.isFolder) {
+      const openFolderAction = `window.open('${item.driveUrl}', '_blank')`;
+      const downloadFolderAction = `downloadFolderFiles('${item.id}')`;
+      
+      return `
+        <div class="recent-file-item recent-folder-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--border-radius-sm); transition: all 0.2s ease;">
+          <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; cursor: pointer; flex-grow: 1;" onclick="${openFolderAction}" title="Open folder in Google Drive">
+            <svg style="color: #f59e0b; width: 20px; height: 20px; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 21a3 3 0 003-3v-9a3 3 0 00-3-3h-5.379a1.5 1.5 0 01-1.06-.44l-1.122-1.12A3 3 0 009.879 3H4.5a3 3 0 00-3 3v12a3 3 0 003 3h15z"/></svg>
+            <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left;">
+              <span style="font-size: 13.5px; font-weight: 600; color: #fbbf24; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">📁 ${item.name} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(Folder • ${item.fileCount} file${item.fileCount === 1 ? '' : 's'})</span></span>
+              <span style="font-size: 11px; color: var(--text-muted);">Modified ${timeStr} • Click to open in Drive</span>
+            </div>
+          </div>
+          
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button onclick="${openFolderAction}" class="text-btn" style="color: #fbbf24; padding: 5px 10px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 4px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); border-radius: 4px; cursor: pointer;" title="Open folder in Google Drive">
+              ↗ Open
+            </button>
+            <button onclick="${downloadFolderAction}" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;" title="Download all files in this folder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 13px; height: 13px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Download Folder
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
     let iconSvg = '';
     // Select icon based on file type
-    if (file.mime.includes('spreadsheet') || file.mime.includes('excel')) {
-      iconSvg = `<svg style="color: #107c41; width: 16px; height: 16px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`;
-    } else if (file.mime.includes('document') || file.mime.includes('word') || file.mime.includes('text')) {
+    if (item.mime && (item.mime.includes('spreadsheet') || item.mime.includes('excel'))) {
+      iconSvg = `<svg style="color: #107c41; width: 16px; height: 16px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 01-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`;
+    } else if (item.mime && (item.mime.includes('document') || item.mime.includes('word') || item.mime.includes('text'))) {
       iconSvg = `<svg style="color: #2b579a; width: 16px; height: 16px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`;
-    } else if (file.mime.includes('pdf')) {
+    } else if (item.mime && item.mime.includes('pdf')) {
       iconSvg = `<svg style="color: #ff3333; width: 16px; height: 16px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`;
-    } else if (file.mime.includes('image')) {
+    } else if (item.mime && item.mime.includes('image')) {
       iconSvg = `<svg style="color: #3b82f6; width: 16px; height: 16px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
     } else {
       iconSvg = `<svg style="color: var(--text-muted); width: 16px; height: 16px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`;
     }
     
-    const timeStr = formatRelativeTime(file.lastUpdated);
-    const downloadAction = file.isGoogleType ? `window.open('${file.downloadUrl}', '_blank')` : `triggerIndividualDownload('${file.downloadUrl}', '${file.name.replace(/'/g, "\\'")}')`;
+    const downloadAction = item.isGoogleType ? `window.open('${item.downloadUrl}', '_blank')` : `triggerIndividualDownload('${item.downloadUrl}', '${item.name.replace(/'/g, "\\'")}')`;
     
     return `
       <div class="recent-file-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.01); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); transition: all 0.2s ease;">
         <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; cursor: pointer; flex-grow: 1;" onclick="${downloadAction}">
           ${iconSvg}
           <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left;">
-            <span style="font-size: 13px; font-weight: 500; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${file.name}</span>
+            <span style="font-size: 13px; font-weight: 500; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${item.name}</span>
             <span style="font-size: 11px; color: var(--text-muted);">${timeStr}</span>
           </div>
         </div>
@@ -719,6 +738,36 @@ function renderRecentFiles(files) {
       </div>
     `;
   }).join('');
+}
+
+// Download all files inside a modified folder
+async function downloadFolderFiles(folderId) {
+  const folder = cachedRecentFiles.find(item => item.id === folderId);
+  if (!folder || !folder.files || folder.files.length === 0) {
+    window.showToast('Folder Download', '⚠️ No downloadable files in this folder.', 'warning', 3000);
+    return;
+  }
+  
+  window.showToast('Folder Download', `📥 Downloading ${folder.files.length} file(s) from "${folder.name}"...`, 'info', 4000);
+  
+  for (let i = 0; i < folder.files.length; i++) {
+    const file = folder.files[i];
+    await new Promise(resolve => setTimeout(resolve, i === 0 ? 0 : 700));
+    
+    if (file.isGoogleType) {
+      window.open(file.downloadUrl, '_blank');
+    } else {
+      const a = document.createElement('a');
+      a.href = file.downloadUrl;
+      a.download = file.name;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  }
+  
+  window.showToast('Download Complete', `✅ Finished downloading folder "${folder.name}"`, 'success', 4000);
 }
 
 // Relative time calculator
@@ -746,7 +795,7 @@ function triggerIndividualDownload(url, filename) {
   document.body.removeChild(a);
 }
 
-// Bulk download all recently modified files
+// Bulk download all recently modified folders & files
 async function downloadRecentFiles() {
   if (cachedRecentFiles.length === 0) return;
   
@@ -755,26 +804,29 @@ async function downloadRecentFiles() {
   btn.disabled = true;
   btn.innerHTML = `Downloading...`;
   
-  window.showToast('Bulk Download', `📥 Downloading ${cachedRecentFiles.length} file(s)...`, 'info', 3000);
+  window.showToast('Bulk Download', `📥 Processing ${cachedRecentFiles.length} item(s)...`, 'info', 3000);
   
   for (let i = 0; i < cachedRecentFiles.length; i++) {
-    const file = cachedRecentFiles[i];
-    await new Promise(resolve => setTimeout(resolve, i === 0 ? 0 : 700));
-    
-    if (file.isGoogleType) {
-      window.open(file.downloadUrl, '_blank');
+    const item = cachedRecentFiles[i];
+    if (item.isFolder) {
+      await downloadFolderFiles(item.id);
     } else {
-      const a = document.createElement('a');
-      a.href = file.downloadUrl;
-      a.download = file.name;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      await new Promise(resolve => setTimeout(resolve, i === 0 ? 0 : 700));
+      if (item.isGoogleType) {
+        window.open(item.downloadUrl, '_blank');
+      } else {
+        const a = document.createElement('a');
+        a.href = item.downloadUrl;
+        a.download = item.name;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
     }
   }
   
   btn.disabled = false;
   btn.innerHTML = originalHtml;
-  window.showToast('Bulk Download Complete', '✅ All downloads initialized successfully!', 'success', 3500);
+  window.showToast('Bulk Download Complete', '✅ All recent items processed successfully!', 'success', 3500);
 }
