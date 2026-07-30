@@ -761,34 +761,57 @@ function renderRecentFiles(items) {
   }).join('');
 }
 
-// Download all files inside a modified folder
+// Download all files inside a modified folder (Server Zip + Iframe Fallback)
 async function downloadFolderFiles(folderId) {
   const folder = cachedRecentFiles.find(item => item.id === folderId);
-  if (!folder || !folder.files || folder.files.length === 0) {
-    window.showToast('Folder Download', '⚠️ No downloadable files in this folder.', 'warning', 3000);
-    return;
-  }
+  const folderName = folder ? folder.name : 'Folder';
   
-  window.showToast('Folder Download', `📥 Downloading ${folder.files.length} file(s) from "${folder.name}"...`, 'info', 4000);
+  window.showToast('Zipping Folder', `📦 Packaging folder "${folderName}" into a zip file...`, 'info', 4000);
   
-  for (let i = 0; i < folder.files.length; i++) {
-    const file = folder.files[i];
-    await new Promise(resolve => setTimeout(resolve, i === 0 ? 0 : 700));
+  try {
+    const res = await fetch(SEARCH_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'zipFolder', folderId: folderId })
+    });
     
-    if (file.isGoogleType) {
-      window.open(file.downloadUrl, '_blank');
-    } else {
+    const data = await res.json();
+    if (data.success && data.zipUrl) {
+      window.showToast('Download Starting', `💾 Starting zip download for ${data.filename}...`, 'success', 3500);
       const a = document.createElement('a');
-      a.href = file.downloadUrl;
-      a.download = file.name;
+      a.href = data.zipUrl;
+      a.download = data.filename;
       a.target = '_blank';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      return;
     }
+  } catch (err) {
+    console.warn('Server zip creation failed, falling back to multi-file iframe download:', err);
   }
   
-  window.showToast('Download Complete', `✅ Finished downloading folder "${folder.name}"`, 'success', 4000);
+  // Fallback: Multi-file iframe download loop (bypasses browser popup blocks)
+  if (!folder || !folder.files || folder.files.length === 0) {
+    window.showToast('Folder Download', '⚠️ No downloadable files found in this folder.', 'warning', 3000);
+    return;
+  }
+  
+  window.showToast('Downloading Files', `📥 Downloading ${folder.files.length} file(s) from "${folderName}"...`, 'info', 4000);
+  
+  folder.files.forEach((file, idx) => {
+    setTimeout(() => {
+      if (file.isGoogleType) {
+        window.open(file.downloadUrl, '_blank');
+      } else {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = file.downloadUrl;
+        document.body.appendChild(iframe);
+        setTimeout(() => document.body.removeChild(iframe), 60000);
+      }
+    }, idx * 1000);
+  });
 }
 
 // Relative time calculator
