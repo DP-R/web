@@ -761,32 +761,37 @@ function renderRecentFiles(items) {
   }).join('');
 }
 
-// Blazing Fast Folder Downloader (0ms Server Latency - Instant Parallel CDN Streams)
-function downloadFolderFiles(folderId) {
+// Clean & Fast Single Zip Downloader for Folders
+async function downloadFolderFiles(folderId) {
   const folder = cachedRecentFiles.find(item => item.id === folderId);
-  if (!folder || !folder.files || folder.files.length === 0) {
-    window.showToast('Folder Download', '⚠️ No downloadable files found in this folder.', 'warning', 3000);
-    return;
+  const folderName = folder ? folder.name : 'Folder';
+  
+  window.showToast('Zipping Folder', `📦 Packaging "${folderName}" into ${folderName}.zip...`, 'info', 4000);
+  
+  try {
+    const res = await fetch(SEARCH_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'zipFolder', folderId: folderId })
+    });
+    
+    const data = await res.json();
+    if (data.success && (data.base64Data || data.zipUrl)) {
+      window.showToast('Download Complete', `💾 Downloaded ${data.filename}!`, 'success', 3000);
+      const a = document.createElement('a');
+      a.href = data.base64Data || data.zipUrl;
+      a.download = data.filename || `${folderName}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    } else {
+      throw new Error(data.error || 'Failed to generate zip file');
+    }
+  } catch (err) {
+    console.error('Folder zip error:', err);
+    window.showToast('Zip Error', `❌ Could not download zip for ${folderName}: ${err.message}`, 'danger', 4000);
   }
-  
-  const folderName = folder.name;
-  window.showToast('Blazing Download', `🚀 Starting instant download for ${folder.files.length} file(s) in "${folderName}"...`, 'success', 2500);
-  
-  folder.files.forEach((file, idx) => {
-    setTimeout(() => {
-      if (file.isGoogleType) {
-        window.open(file.downloadUrl, '_blank');
-      } else {
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = file.downloadUrl;
-        document.body.appendChild(iframe);
-        setTimeout(() => {
-          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-        }, 30000);
-      }
-    }, idx * 50); // 50ms micro-stagger for instant parallel execution
-  });
 }
 
 // Relative time calculator
@@ -814,34 +819,18 @@ function triggerIndividualDownload(url, filename) {
   document.body.removeChild(a);
 }
 
-// Blazing Fast Bulk Downloader for All Recent Uploads
-function downloadRecentFiles() {
+// Bulk Downloader for All Recent Uploads
+async function downloadRecentFiles() {
   if (cachedRecentFiles.length === 0) return;
-  
-  let allFiles = [];
-  cachedRecentFiles.forEach(item => {
-    if (item.isFolder && item.files) {
-      allFiles = allFiles.concat(item.files);
-    } else {
-      allFiles.push(item);
-    }
-  });
 
-  window.showToast('Blazing Download', `🚀 Starting instant download for ${allFiles.length} file(s)...`, 'success', 3000);
-  
-  allFiles.forEach((file, idx) => {
-    setTimeout(() => {
-      if (file.isGoogleType) {
-        window.open(file.downloadUrl, '_blank');
-      } else {
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = file.downloadUrl;
-        document.body.appendChild(iframe);
-        setTimeout(() => {
-          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-        }, 30000);
-      }
-    }, idx * 50); // 50ms micro-stagger
-  });
+  window.showToast('Downloading Recent', `📥 Processing ${cachedRecentFiles.length} item(s)...`, 'info', 3000);
+
+  for (let i = 0; i < cachedRecentFiles.length; i++) {
+    const item = cachedRecentFiles[i];
+    if (item.isFolder) {
+      await downloadFolderFiles(item.id);
+    } else {
+      triggerIndividualDownload(item.downloadUrl, item.name);
+    }
+  }
 }
