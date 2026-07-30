@@ -761,43 +761,16 @@ function renderRecentFiles(items) {
   }).join('');
 }
 
-// Download all files inside a modified folder (Server Zip + Iframe Fallback)
-async function downloadFolderFiles(folderId) {
+// Blazing Fast Folder Downloader (0ms Server Latency - Instant Parallel CDN Streams)
+function downloadFolderFiles(folderId) {
   const folder = cachedRecentFiles.find(item => item.id === folderId);
-  const folderName = folder ? folder.name : 'Folder';
-  
-  window.showToast('Zipping Folder', `📦 Packaging folder "${folderName}" into a zip file...`, 'info', 4000);
-  
-  try {
-    const res = await fetch(SEARCH_WEB_APP_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'zipFolder', folderId: folderId })
-    });
-    
-    const data = await res.json();
-    if (data.success && data.zipUrl) {
-      window.showToast('Download Starting', `💾 Starting zip download for ${data.filename}...`, 'success', 3500);
-      const a = document.createElement('a');
-      a.href = data.zipUrl;
-      a.download = data.filename;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      return;
-    }
-  } catch (err) {
-    console.warn('Server zip creation failed, falling back to multi-file iframe download:', err);
-  }
-  
-  // Fallback: Multi-file iframe download loop (bypasses browser popup blocks)
   if (!folder || !folder.files || folder.files.length === 0) {
     window.showToast('Folder Download', '⚠️ No downloadable files found in this folder.', 'warning', 3000);
     return;
   }
   
-  window.showToast('Downloading Files', `📥 Downloading ${folder.files.length} file(s) from "${folderName}"...`, 'info', 4000);
+  const folderName = folder.name;
+  window.showToast('Blazing Download', `🚀 Starting instant download for ${folder.files.length} file(s) in "${folderName}"...`, 'success', 2500);
   
   folder.files.forEach((file, idx) => {
     setTimeout(() => {
@@ -808,9 +781,11 @@ async function downloadFolderFiles(folderId) {
         iframe.style.display = 'none';
         iframe.src = file.downloadUrl;
         document.body.appendChild(iframe);
-        setTimeout(() => document.body.removeChild(iframe), 60000);
+        setTimeout(() => {
+          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+        }, 30000);
       }
-    }, idx * 1000);
+    }, idx * 50); // 50ms micro-stagger for instant parallel execution
   });
 }
 
@@ -839,38 +814,34 @@ function triggerIndividualDownload(url, filename) {
   document.body.removeChild(a);
 }
 
-// Bulk download all recently modified folders & files
-async function downloadRecentFiles() {
+// Blazing Fast Bulk Downloader for All Recent Uploads
+function downloadRecentFiles() {
   if (cachedRecentFiles.length === 0) return;
   
-  const btn = document.getElementById('bulkDownloadBtn');
-  const originalHtml = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = `Downloading...`;
-  
-  window.showToast('Bulk Download', `📥 Processing ${cachedRecentFiles.length} item(s)...`, 'info', 3000);
-  
-  for (let i = 0; i < cachedRecentFiles.length; i++) {
-    const item = cachedRecentFiles[i];
-    if (item.isFolder) {
-      await downloadFolderFiles(item.id);
+  let allFiles = [];
+  cachedRecentFiles.forEach(item => {
+    if (item.isFolder && item.files) {
+      allFiles = allFiles.concat(item.files);
     } else {
-      await new Promise(resolve => setTimeout(resolve, i === 0 ? 0 : 700));
-      if (item.isGoogleType) {
-        window.open(item.downloadUrl, '_blank');
-      } else {
-        const a = document.createElement('a');
-        a.href = item.downloadUrl;
-        a.download = item.name;
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
+      allFiles.push(item);
     }
-  }
+  });
+
+  window.showToast('Blazing Download', `🚀 Starting instant download for ${allFiles.length} file(s)...`, 'success', 3000);
   
-  btn.disabled = false;
-  btn.innerHTML = originalHtml;
-  window.showToast('Bulk Download Complete', '✅ All recent items processed successfully!', 'success', 3500);
+  allFiles.forEach((file, idx) => {
+    setTimeout(() => {
+      if (file.isGoogleType) {
+        window.open(file.downloadUrl, '_blank');
+      } else {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = file.downloadUrl;
+        document.body.appendChild(iframe);
+        setTimeout(() => {
+          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+        }, 30000);
+      }
+    }, idx * 50); // 50ms micro-stagger
+  });
 }
