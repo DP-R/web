@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Clipboard Tabs</title>
-    <!-- CryptoJS for End-to-End Encryption -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <!-- QRCode Generator -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; background-color: #1e1e1e; color: #d4d4d4; font-family: system-ui, sans-serif; display: flex; flex-direction: column; }
         header { padding: 15px 20px; background-color: #2d2d2d; display: flex; justify-content: space-between; align-items: center; }
@@ -21,7 +18,7 @@
         .indicator { width: 10px; height: 10px; border-radius: 50%; background-color: #f44336; }
         .indicator.online { background-color: #4caf50; }
         
-        button.btn-main { background: #4caf50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        button.btn-main { background: #4caf50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-weight: bold; }
         button.btn-main:hover { background: #45a049; }
         button.btn-icon { background: #3d3d3d; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; }
         button.btn-icon:hover { background: #555; }
@@ -46,12 +43,11 @@
         /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-overlay.active { display: flex; }
-        .modal { background: #2d2d2d; padding: 25px; border-radius: 8px; max-width: 400px; width: 100%; text-align: center; }
+        .modal { background: #2d2d2d; padding: 25px; border-radius: 8px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .modal h2 { margin-top: 0; }
         .device-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #1e1e1e; margin-bottom: 8px; border-radius: 4px; font-size: 0.95rem; }
         .btn-danger { background: #f44336; padding: 6px 12px; }
         .btn-danger:hover { background: #d32f2f; }
-        #qrcode { display: flex; justify-content: center; margin: 20px 0; background: white; padding: 15px; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -59,11 +55,11 @@
     <header>
         <h1>Live Clipboard</h1>
         <div class="header-right">
-            <label style="font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <button class="btn-main" id="request-btn" style="background: #2196F3; display: none;">🔔 Request Access</button>
+            <label style="font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;" id="remember-wrapper">
                 <input type="checkbox" id="remember-me"> Save PIN
             </label>
-            <input type="password" id="pin-input" class="pin-input" placeholder="Secret PIN" title="Enter PIN">
-            <button class="btn-icon" id="qr-btn" title="Login via Phone QR">📱</button>
+            <input type="password" id="pin-input" class="pin-input" placeholder="Manual PIN" title="Enter PIN">
             <button class="btn-icon" id="devices-btn" title="Manage Active Devices">💻</button>
             <div id="status"><div id="indicator" class="indicator"></div></div>
             <button class="btn-main" id="copy-btn">Copy</button>
@@ -74,15 +70,6 @@
     <div id="clipboard" class="editor" contenteditable="true" placeholder="Paste formatted text or images here..."></div>
 
     <!-- Modals -->
-    <div class="modal-overlay" id="qr-modal">
-        <div class="modal">
-            <h2>Phone Login</h2>
-            <p style="color: #a0a0a0; font-size: 0.9rem;">Scan this QR with a device that already has your PIN to instantly unlock this screen without typing.</p>
-            <div id="qrcode"></div>
-            <button class="btn-main" onclick="document.getElementById('qr-modal').classList.remove('active')">Cancel</button>
-        </div>
-    </div>
-
     <div class="modal-overlay" id="devices-modal">
         <div class="modal">
             <h2>Active Devices</h2>
@@ -95,9 +82,9 @@
     <div class="modal-overlay" id="approve-modal">
         <div class="modal">
             <h2>Approve Login?</h2>
-            <p>Another computer is trying to log in via QR code.</p>
-            <button class="btn-main" id="approve-btn" style="width: 100%; margin-bottom: 10px;">Approve Login</button>
-            <button class="btn-main" style="width: 100%; background: #555;" onclick="window.history.replaceState({}, '', window.location.pathname); document.getElementById('approve-modal').classList.remove('active')">Deny</button>
+            <p id="approve-text">Another computer is trying to log in.</p>
+            <button class="btn-main" id="approve-btn" style="width: 100%; margin-bottom: 10px;">Approve Access</button>
+            <button class="btn-main" id="deny-btn" style="width: 100%; background: #555;">Deny</button>
         </div>
     </div>
 
@@ -121,6 +108,7 @@
         const editor = document.getElementById('clipboard');
         const pinInput = document.getElementById('pin-input');
         const rememberCheckbox = document.getElementById('remember-me');
+        const requestBtn = document.getElementById('request-btn');
         const myDeviceRef = ref(db, `clipboard/active-devices/${myDeviceId}`);
         
         let isLocalChange = false;
@@ -133,7 +121,7 @@
         rememberCheckbox.checked = localStorage.getItem('clip_remember') === 'true';
         rememberCheckbox.addEventListener('change', (e) => {
             localStorage.setItem('clip_remember', e.target.checked);
-            savePin(pinInput.value); // Re-save with new preference
+            savePin(pinInput.value);
         });
 
         const savedPin = localStorage.getItem('clip_pin') || sessionStorage.getItem('clip_pin');
@@ -166,65 +154,89 @@
             }
         }
 
+        function updateUIState() {
+            if (pinInput.value) {
+                requestBtn.style.display = 'none';
+            } else {
+                requestBtn.style.display = 'block';
+            }
+        }
+        updateUIState();
+
         pinInput.addEventListener('input', (e) => {
+            updateUIState();
             savePin(e.target.value);
             updatePresence();
             renderTabs(); 
             decryptAndDisplayContent(rawContentSnapshot);
         });
 
-        // Listen for being remotely revoked
+        // Remote Revocation
         onValue(myDeviceRef, (snap) => {
             if (!snap.exists() && pinInput.value) {
-                pinInput.value = ""; savePin(""); // wipe memory instantly
+                pinInput.value = ""; savePin(""); 
                 document.body.innerHTML = "<h1 style='text-align:center; margin-top:20%; color:#f44336;'>Session Revoked.</h1>";
                 setTimeout(() => window.location.reload(), 2000);
             }
         });
 
-        // Initial presence update
         if (pinInput.value) updatePresence();
 
-        // --- QR PHONE LOGIN ---
-        const urlParams = new URLSearchParams(window.location.search);
-        const authRequestId = urlParams.get('auth');
-        if (authRequestId) {
-            if (savedPin) {
-                document.getElementById('approve-modal').classList.add('active');
-                document.getElementById('approve-btn').onclick = () => {
-                    set(ref(db, `clipboard/auth-requests/${authRequestId}`), savedPin).then(() => {
-                        alert("Approved! The other screen is now unlocked.");
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                        document.getElementById('approve-modal').classList.remove('active');
-                    });
-                };
-            } else {
-                alert("You don't have a PIN saved on this phone to approve the login.");
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        }
-
-        let currentAuthReqRef = null;
-        document.getElementById('qr-btn').onclick = () => {
+        // --- GLOBAL BROADCAST REQUEST (No QR) ---
+        // 1. Requester Flow (Public PC)
+        requestBtn.onclick = () => {
             const tempId = "req_" + Math.random().toString(36).substr(2, 9);
-            const authUrl = window.location.origin + window.location.pathname + "?auth=" + tempId;
+            const reqRef = ref(db, `clipboard/global-requests/${tempId}`);
             
-            document.getElementById('qrcode').innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), { text: authUrl, width: 220, height: 220, colorDark: "#000", colorLight: "#fff" });
-            document.getElementById('qr-modal').classList.add('active');
+            set(reqRef, { name: getDeviceName(), status: 'pending' });
+            onDisconnect(reqRef).remove(); // Auto-cancel if user closes tab
             
-            currentAuthReqRef = ref(db, `clipboard/auth-requests/${tempId}`);
-            onValue(currentAuthReqRef, (snap) => {
-                const pin = snap.val();
-                if (pin) { // We received the PIN!
-                    pinInput.value = pin;
-                    savePin(pin); updatePresence();
-                    document.getElementById('qr-modal').classList.remove('active');
-                    remove(currentAuthReqRef);
-                    renderTabs(); decryptAndDisplayContent(rawContentSnapshot);
+            requestBtn.innerText = "⏳ Waiting for phone...";
+            requestBtn.style.background = "#ff9800";
+            
+            onValue(reqRef, (snap) => {
+                const data = snap.val();
+                if (data && data.pin) {
+                    // Approved!
+                    pinInput.value = data.pin;
+                    rememberCheckbox.checked = false; // Force session storage for remote access!
+                    savePin(data.pin); 
+                    updatePresence(); renderTabs(); decryptAndDisplayContent(rawContentSnapshot);
+                    remove(reqRef); // Cleanup
+                    updateUIState();
+                } else if (!data && requestBtn.innerText.includes("Waiting")) {
+                    // Denied
+                    requestBtn.innerText = "❌ Denied";
+                    requestBtn.style.background = "#f44336";
+                    setTimeout(() => { requestBtn.innerText = "🔔 Request Access"; requestBtn.style.background = "#2196F3"; }, 3000);
                 }
             });
         };
+
+        // 2. Approver Flow (Phone)
+        const globalReqRef = ref(db, 'clipboard/global-requests');
+        onValue(globalReqRef, (snap) => {
+            if (!pinInput.value) return; // Cannot approve if we are not logged in ourselves
+            const reqs = snap.val() || {};
+            
+            const pendingKey = Object.keys(reqs).find(k => reqs[k].status === 'pending');
+            if (pendingKey) {
+                const req = reqs[pendingKey];
+                document.getElementById('approve-text').innerText = `"${req.name}" is requesting access to your clipboard.`;
+                document.getElementById('approve-modal').classList.add('active');
+                
+                document.getElementById('approve-btn').onclick = () => {
+                    set(ref(db, `clipboard/global-requests/${pendingKey}/pin`), pinInput.value);
+                    document.getElementById('approve-modal').classList.remove('active');
+                };
+                
+                document.getElementById('deny-btn').onclick = () => {
+                    remove(ref(db, `clipboard/global-requests/${pendingKey}`));
+                    document.getElementById('approve-modal').classList.remove('active');
+                };
+            }
+        });
+
 
         // --- ACTIVE DEVICES MANAGER ---
         document.getElementById('devices-btn').onclick = () => {
