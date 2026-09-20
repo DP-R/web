@@ -6,83 +6,52 @@
     <title>Live Clipboard Tabs</title>
     <!-- CryptoJS for End-to-End Encryption -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- QRCode Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            background-color: #1e1e1e;
-            color: #d4d4d4;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            flex-direction: column;
-        }
-        header {
-            padding: 15px 20px;
-            background-color: #2d2d2d;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        body, html { margin: 0; padding: 0; height: 100%; background-color: #1e1e1e; color: #d4d4d4; font-family: system-ui, sans-serif; display: flex; flex-direction: column; }
+        header { padding: 15px 20px; background-color: #2d2d2d; display: flex; justify-content: space-between; align-items: center; }
         h1 { margin: 0; font-size: 1.2rem; color: #fff; }
-        .header-right { display: flex; align-items: center; gap: 15px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
         
-        .pin-input {
-            background: #1e1e1e; color: #4caf50; border: 1px solid #4caf50;
-            padding: 6px 10px; border-radius: 4px; width: 100px;
-            outline: none; font-size: 0.9rem; transition: width 0.3s;
-        }
-        .pin-input:focus { width: 150px; background: #fff; color: #000; }
+        .pin-input { background: #1e1e1e; color: #4caf50; border: 1px solid #4caf50; padding: 6px 10px; border-radius: 4px; width: 80px; outline: none; transition: width 0.3s; }
+        .pin-input:focus { width: 120px; background: #fff; color: #000; }
         
-        #status { font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+        #status { display: flex; align-items: center; gap: 8px; }
         .indicator { width: 10px; height: 10px; border-radius: 50%; background-color: #f44336; }
         .indicator.online { background-color: #4caf50; }
         
-        button.btn-main {
-            background: #4caf50; color: white; border: none; padding: 8px 16px;
-            border-radius: 4px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;
-        }
+        button.btn-main { background: #4caf50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
         button.btn-main:hover { background: #45a049; }
+        button.btn-icon { background: #3d3d3d; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 1.1rem; }
+        button.btn-icon:hover { background: #555; }
         
-        /* Tabs Bar */
-        .tabs-container {
-            display: flex; background-color: #252525; border-bottom: 1px solid #3d3d3d;
-            padding: 0 10px; overflow-x: auto;
-        }
+        .tabs-container { display: flex; background-color: #252525; border-bottom: 1px solid #3d3d3d; padding: 0 10px; overflow-x: auto; }
         .tabs-container::-webkit-scrollbar { height: 4px; }
         .tabs-container::-webkit-scrollbar-thumb { background: #4a4a4a; }
-
-        .tab {
-            padding: 12px 20px; cursor: pointer; border-bottom: 2px solid transparent;
-            color: #a0a0a0; user-select: none; display: flex; align-items: center;
-            gap: 10px; white-space: nowrap;
-        }
+        .tab { padding: 12px 20px; cursor: pointer; border-bottom: 2px solid transparent; color: #a0a0a0; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
         .tab:hover { color: #fff; }
-        .tab.active {
-            color: #4caf50; border-bottom: 2px solid #4caf50;
-            background-color: #000000; color: #d4d4d4;
-        }
+        .tab.active { border-bottom: 2px solid #4caf50; background-color: #000000; color: #d4d4d4; }
         .tab-delete { font-size: 1.3rem; line-height: 1; padding: 0 4px; border-radius: 50%; display: none; }
         .tab.active .tab-delete { display: inline-block; color: #888; }
         .tab-delete:hover { color: #ff5555 !important; }
-        
         .add-tab-btn { background: transparent; color: #a0a0a0; font-size: 1.5rem; padding: 5px 15px; border: none; cursor: pointer; }
-        .add-tab-btn:hover { color: #fff; }
-
-        /* Rich Text Editor */
-        .editor {
-            flex: 1; width: 100%; box-sizing: border-box; background-color: #ffffff;
-            color: #000000; border: none; padding: 20px; font-size: 1.1rem; outline: none;
-            overflow-y: auto; font-family: system-ui, -apple-system, sans-serif;
-            transition: opacity 0.2s;
-            /* Magic Dark Mode: Inverts the white background to black, and black text to white for your eyes only */
-            filter: invert(1) hue-rotate(180deg);
-        }
+        
+        .editor { flex: 1; width: 100%; box-sizing: border-box; background-color: #ffffff; color: #000000; border: none; padding: 20px; font-size: 1.1rem; outline: none; overflow-y: auto; filter: invert(1) hue-rotate(180deg); }
         .editor[empty]:before { content: attr(placeholder); color: #888; pointer-events: none; display: block; }
         .editor table { border-collapse: collapse; }
         .editor td, .editor th { border: 1px solid #ccc; padding: 4px 8px; }
-        /* Re-invert images so they don't look like negative x-rays */
         .editor img { max-width: 100%; height: auto; filter: invert(1) hue-rotate(180deg); }
+
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #2d2d2d; padding: 25px; border-radius: 8px; max-width: 400px; width: 100%; text-align: center; }
+        .modal h2 { margin-top: 0; }
+        .device-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #1e1e1e; margin-bottom: 8px; border-radius: 4px; font-size: 0.95rem; }
+        .btn-danger { background: #f44336; padding: 6px 12px; }
+        .btn-danger:hover { background: #d32f2f; }
+        #qrcode { display: flex; justify-content: center; margin: 20px 0; background: white; padding: 15px; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -90,188 +59,285 @@
     <header>
         <h1>Live Clipboard</h1>
         <div class="header-right">
-            <input type="password" id="pin-input" class="pin-input" placeholder="Secret PIN" title="Enter PIN to encrypt your data end-to-end">
-            <div id="status">
-                <div id="indicator" class="indicator"></div>
-            </div>
+            <label style="font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <input type="checkbox" id="remember-me"> Save PIN
+            </label>
+            <input type="password" id="pin-input" class="pin-input" placeholder="Secret PIN" title="Enter PIN">
+            <button class="btn-icon" id="qr-btn" title="Login via Phone QR">📱</button>
+            <button class="btn-icon" id="devices-btn" title="Manage Active Devices">💻</button>
+            <div id="status"><div id="indicator" class="indicator"></div></div>
             <button class="btn-main" id="copy-btn">Copy</button>
         </div>
     </header>
 
     <div class="tabs-container" id="tabs-container"></div>
-    <div id="clipboard" class="editor" contenteditable="true" placeholder="Paste formatted text or images here to sync..."></div>
+    <div id="clipboard" class="editor" contenteditable="true" placeholder="Paste formatted text or images here..."></div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="qr-modal">
+        <div class="modal">
+            <h2>Phone Login</h2>
+            <p style="color: #a0a0a0; font-size: 0.9rem;">Scan this QR with a device that already has your PIN to instantly unlock this screen without typing.</p>
+            <div id="qrcode"></div>
+            <button class="btn-main" onclick="document.getElementById('qr-modal').classList.remove('active')">Cancel</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="devices-modal">
+        <div class="modal">
+            <h2>Active Devices</h2>
+            <p style="color: #a0a0a0; font-size: 0.9rem;">Devices currently connected with your PIN.</p>
+            <div id="devices-list" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;"></div>
+            <button class="btn-main" onclick="document.getElementById('devices-modal').classList.remove('active')">Close</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="approve-modal">
+        <div class="modal">
+            <h2>Approve Login?</h2>
+            <p>Another computer is trying to log in via QR code.</p>
+            <button class="btn-main" id="approve-btn" style="width: 100%; margin-bottom: 10px;">Approve Login</button>
+            <button class="btn-main" style="width: 100%; background: #555;" onclick="window.history.replaceState({}, '', window.location.pathname); document.getElementById('approve-modal').classList.remove('active')">Deny</button>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, remove, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, remove, push, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDBJ9y1yA231l5DBpHdQJUsxdkYHlM_lPE",
             authDomain: "my-clipboard-b96fc.firebaseapp.com",
             databaseURL: "https://my-clipboard-b96fc-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "my-clipboard-b96fc",
-            storageBucket: "my-clipboard-b96fc.firebasestorage.app",
-            messagingSenderId: "599514202906",
-            appId: "1:599514202906:web:538098a893cd0c9431e2a3"
+            projectId: "my-clipboard-b96fc"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        const tabsMetaRef = ref(db, 'clipboard/tabs-meta');
-        const connectedRef = ref(db, '.info/connected');
+        let myDeviceId = localStorage.getItem('clip_device_id');
+        if (!myDeviceId) { myDeviceId = "dev_" + Math.random().toString(36).substr(2, 9); localStorage.setItem('clip_device_id', myDeviceId); }
 
         const editor = document.getElementById('clipboard');
-        const indicator = document.getElementById('indicator');
-        const copyBtn = document.getElementById('copy-btn');
-        const tabsContainer = document.getElementById('tabs-container');
         const pinInput = document.getElementById('pin-input');
-
+        const rememberCheckbox = document.getElementById('remember-me');
+        const myDeviceRef = ref(db, `clipboard/active-devices/${myDeviceId}`);
+        
         let isLocalChange = false;
         let activeTabId = localStorage.getItem('activeTabId') || null;
         let unsubContent = null;
         let tabsData = {};
-        let rawContentSnapshot = ""; // Store raw data to re-decrypt when PIN changes
+        let rawContentSnapshot = "";
 
-        // Setup PIN
-        const savedPin = localStorage.getItem('clip_pin');
+        // --- AUTH & PERSISTENCE ---
+        rememberCheckbox.checked = localStorage.getItem('clip_remember') === 'true';
+        rememberCheckbox.addEventListener('change', (e) => {
+            localStorage.setItem('clip_remember', e.target.checked);
+            savePin(pinInput.value); // Re-save with new preference
+        });
+
+        const savedPin = localStorage.getItem('clip_pin') || sessionStorage.getItem('clip_pin');
         if (savedPin) pinInput.value = savedPin;
 
+        function savePin(pin) {
+            if (!pin) { localStorage.removeItem('clip_pin'); sessionStorage.removeItem('clip_pin'); return; }
+            if (rememberCheckbox.checked) {
+                localStorage.setItem('clip_pin', pin); sessionStorage.removeItem('clip_pin');
+            } else {
+                sessionStorage.setItem('clip_pin', pin); localStorage.removeItem('clip_pin');
+            }
+        }
+
+        function getDeviceName() {
+            const ua = navigator.userAgent;
+            if (ua.includes("Windows")) return "Windows PC";
+            if (ua.includes("Mac")) return "Mac";
+            if (ua.includes("iPhone")) return "iPhone";
+            if (ua.includes("Android")) return "Android";
+            return "Unknown Browser";
+        }
+
+        function updatePresence() {
+            if (pinInput.value) {
+                set(myDeviceRef, { name: getDeviceName(), time: Date.now() });
+                onDisconnect(myDeviceRef).remove();
+            } else {
+                remove(myDeviceRef);
+            }
+        }
+
         pinInput.addEventListener('input', (e) => {
-            localStorage.setItem('clip_pin', e.target.value);
+            savePin(e.target.value);
+            updatePresence();
             renderTabs(); 
-            // Re-decrypt current content without re-fetching
             decryptAndDisplayContent(rawContentSnapshot);
         });
 
+        // Listen for being remotely revoked
+        onValue(myDeviceRef, (snap) => {
+            if (!snap.exists() && pinInput.value) {
+                pinInput.value = ""; savePin(""); // wipe memory instantly
+                document.body.innerHTML = "<h1 style='text-align:center; margin-top:20%; color:#f44336;'>Session Revoked.</h1>";
+                setTimeout(() => window.location.reload(), 2000);
+            }
+        });
+
+        // Initial presence update
+        if (pinInput.value) updatePresence();
+
+        // --- QR PHONE LOGIN ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const authRequestId = urlParams.get('auth');
+        if (authRequestId) {
+            if (savedPin) {
+                document.getElementById('approve-modal').classList.add('active');
+                document.getElementById('approve-btn').onclick = () => {
+                    set(ref(db, `clipboard/auth-requests/${authRequestId}`), savedPin).then(() => {
+                        alert("Approved! The other screen is now unlocked.");
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        document.getElementById('approve-modal').classList.remove('active');
+                    });
+                };
+            } else {
+                alert("You don't have a PIN saved on this phone to approve the login.");
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        let currentAuthReqRef = null;
+        document.getElementById('qr-btn').onclick = () => {
+            const tempId = "req_" + Math.random().toString(36).substr(2, 9);
+            const authUrl = window.location.origin + window.location.pathname + "?auth=" + tempId;
+            
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), { text: authUrl, width: 220, height: 220, colorDark: "#000", colorLight: "#fff" });
+            document.getElementById('qr-modal').classList.add('active');
+            
+            currentAuthReqRef = ref(db, `clipboard/auth-requests/${tempId}`);
+            onValue(currentAuthReqRef, (snap) => {
+                const pin = snap.val();
+                if (pin) { // We received the PIN!
+                    pinInput.value = pin;
+                    savePin(pin); updatePresence();
+                    document.getElementById('qr-modal').classList.remove('active');
+                    remove(currentAuthReqRef);
+                    renderTabs(); decryptAndDisplayContent(rawContentSnapshot);
+                }
+            });
+        };
+
+        // --- ACTIVE DEVICES MANAGER ---
+        document.getElementById('devices-btn').onclick = () => {
+            document.getElementById('devices-modal').classList.add('active');
+            onValue(ref(db, 'clipboard/active-devices'), (snap) => {
+                const list = document.getElementById('devices-list');
+                list.innerHTML = "";
+                const devices = snap.val() || {};
+                Object.entries(devices).forEach(([id, data]) => {
+                    const div = document.createElement('div'); div.className = "device-item";
+                    div.innerHTML = `<span>${data.name} ${id === myDeviceId ? "(You)" : ""}</span>`;
+                    if (id !== myDeviceId) {
+                        const btn = document.createElement('button'); btn.className = "btn-main btn-danger"; btn.innerText = "Revoke";
+                        btn.onclick = () => remove(ref(db, `clipboard/active-devices/${id}`));
+                        div.appendChild(btn);
+                    }
+                    list.appendChild(div);
+                });
+            });
+        };
+
+        // --- ENCRYPTION & TABS LOGIC ---
         function encryptText(text) {
             const pin = pinInput.value;
             if (!pin) return text;
-            try { return "ENC:" + CryptoJS.AES.encrypt(text, pin).toString(); } 
-            catch(e) { return text; }
+            try { return "ENC:" + CryptoJS.AES.encrypt(text, pin).toString(); } catch(e) { return text; }
         }
-
         function decryptText(text) {
             if (!text || typeof text !== 'string' || !text.startsWith("ENC:")) return text;
             const pin = pinInput.value;
             if (!pin) return "🔒 [Encrypted - Enter PIN to view]";
-            try {
-                const decrypted = CryptoJS.AES.decrypt(text.slice(4), pin).toString(CryptoJS.enc.Utf8);
-                return decrypted || "🔒 [Wrong PIN]";
-            } catch (e) {
-                return "🔒 [Wrong PIN]";
-            }
+            try { return CryptoJS.AES.decrypt(text.slice(4), pin).toString(CryptoJS.enc.Utf8) || "🔒 [Wrong PIN]"; } catch (e) { return "🔒 [Wrong PIN]"; }
         }
 
-        function updatePlaceholder() {
-            if (editor.innerHTML.trim() === '' || editor.innerHTML === '<br>') editor.setAttribute('empty', '');
-            else editor.removeAttribute('empty');
-        }
-        editor.addEventListener('input', updatePlaceholder);
-
-        onValue(connectedRef, (snap) => {
-            if (snap.val() === true) indicator.classList.add('online');
-            else indicator.classList.remove('online');
+        onValue(ref(db, '.info/connected'), (snap) => {
+            if (snap.val() === true) document.getElementById('indicator').classList.add('online');
+            else document.getElementById('indicator').classList.remove('online');
         });
 
-        onValue(tabsMetaRef, (snapshot) => {
+        onValue(ref(db, 'clipboard/tabs-meta'), (snapshot) => {
             tabsData = snapshot.val() || {};
             if (Object.keys(tabsData).length === 0) {
-                set(ref(db, `clipboard/tabs-meta/tab_default`), { name: encryptText("Main") });
-                return;
+                set(ref(db, `clipboard/tabs-meta/tab_default`), { name: encryptText("Main") }); return;
             }
             if (!activeTabId || !tabsData[activeTabId]) activeTabId = Object.keys(tabsData)[0];
-            renderTabs();
-            subscribeToActiveTab();
+            renderTabs(); subscribeToActiveTab();
         });
 
         function renderTabs() {
-            tabsContainer.innerHTML = '';
+            const container = document.getElementById('tabs-container'); container.innerHTML = '';
             Object.entries(tabsData).forEach(([id, meta]) => {
-                const tabEl = document.createElement('div');
-                tabEl.className = `tab ${id === activeTabId ? 'active' : ''}`;
-                
+                const tabEl = document.createElement('div'); tabEl.className = `tab ${id === activeTabId ? 'active' : ''}`;
                 const decryptedName = decryptText(meta.name);
                 
-                const nameSpan = document.createElement('span');
-                nameSpan.innerText = decryptedName;
+                const nameSpan = document.createElement('span'); nameSpan.innerText = decryptedName;
                 nameSpan.ondblclick = (e) => {
-                    e.stopPropagation();
-                    if (decryptedName.startsWith("🔒")) return alert("Enter correct PIN before renaming.");
-                    const newName = prompt("Enter new tab name:", decryptedName);
-                    if (newName && newName.trim() !== "") {
-                        set(ref(db, `clipboard/tabs-meta/${id}/name`), encryptText(newName.trim()));
-                    }
+                    e.stopPropagation(); if (decryptedName.startsWith("🔒")) return;
+                    const newName = prompt("New tab name:", decryptedName);
+                    if (newName) set(ref(db, `clipboard/tabs-meta/${id}/name`), encryptText(newName.trim()));
                 };
                 
-                const delBtn = document.createElement('span');
-                delBtn.className = 'tab-delete'; delBtn.innerHTML = '&times;';
+                const delBtn = document.createElement('span'); delBtn.className = 'tab-delete'; delBtn.innerHTML = '&times;';
                 delBtn.onclick = (e) => {
                     e.stopPropagation();
-                    if (Object.keys(tabsData).length === 1) return alert("Cannot delete the last tab.");
+                    if (Object.keys(tabsData).length === 1) return alert("Cannot delete last tab.");
                     if (confirm(`Delete tab "${decryptedName}"?`)) {
-                        remove(ref(db, `clipboard/tabs-meta/${id}`));
-                        remove(ref(db, `clipboard/tabs-content/${id}`));
+                        remove(ref(db, `clipboard/tabs-meta/${id}`)); remove(ref(db, `clipboard/tabs-content/${id}`));
                     }
                 };
 
                 tabEl.appendChild(nameSpan); tabEl.appendChild(delBtn);
                 tabEl.onclick = () => {
-                    if (activeTabId !== id) {
-                        activeTabId = id; localStorage.setItem('activeTabId', id);
-                        renderTabs(); subscribeToActiveTab();
-                    }
+                    if (activeTabId !== id) { activeTabId = id; localStorage.setItem('activeTabId', id); renderTabs(); subscribeToActiveTab(); }
                 };
-                tabsContainer.appendChild(tabEl);
+                container.appendChild(tabEl);
             });
-
-            const addBtn = document.createElement('button');
-            addBtn.className = 'add-tab-btn'; addBtn.innerText = '+';
+            const addBtn = document.createElement('button'); addBtn.className = 'add-tab-btn'; addBtn.innerText = '+';
             addBtn.onclick = () => {
                 const name = prompt("Enter tab name:", "New Tab");
-                if (name && name.trim() !== "") {
-                    const newRef = push(tabsMetaRef);
+                if (name) {
+                    const newRef = push(ref(db, 'clipboard/tabs-meta'));
                     set(newRef, { name: encryptText(name.trim()) });
                     activeTabId = newRef.key; localStorage.setItem('activeTabId', activeTabId);
                 }
             };
-            tabsContainer.appendChild(addBtn);
+            container.appendChild(addBtn);
         }
 
         function decryptAndDisplayContent(raw) {
             const decrypted = decryptText(raw);
             editor.innerHTML = decrypted;
-            if (decrypted.startsWith("🔒")) {
-                editor.setAttribute("contenteditable", "false");
-                editor.style.opacity = "0.5";
-            } else {
-                editor.setAttribute("contenteditable", "true");
-                editor.style.opacity = "1";
-            }
-            updatePlaceholder();
+            if (decrypted.startsWith("🔒")) { editor.setAttribute("contenteditable", "false"); editor.style.opacity = "0.5"; }
+            else { editor.setAttribute("contenteditable", "true"); editor.style.opacity = "1"; }
+            if (editor.innerHTML.trim() === '' || editor.innerHTML === '<br>') editor.setAttribute('empty', '');
+            else editor.removeAttribute('empty');
         }
 
         function subscribeToActiveTab() {
             if (!activeTabId) return;
             if (unsubContent) unsubContent();
-            
             editor.innerHTML = "";
-            updatePlaceholder();
-            
             unsubContent = onValue(ref(db, `clipboard/tabs-content/${activeTabId}`), (snapshot) => {
-                if (!isLocalChange) {
-                    rawContentSnapshot = snapshot.val() || "";
-                    decryptAndDisplayContent(rawContentSnapshot);
-                }
+                if (!isLocalChange) { rawContentSnapshot = snapshot.val() || ""; decryptAndDisplayContent(rawContentSnapshot); }
             });
         }
 
         editor.addEventListener('input', (e) => {
             if (!activeTabId || editor.getAttribute("contenteditable") === "false") return;
             isLocalChange = true;
+            if (editor.innerHTML.trim() === '' || editor.innerHTML === '<br>') editor.setAttribute('empty', '');
+            else editor.removeAttribute('empty');
             set(ref(db, `clipboard/tabs-content/${activeTabId}`), encryptText(editor.innerHTML))
-                .then(() => { isLocalChange = false; })
-                .catch(err => { isLocalChange = false; });
+                .then(() => { isLocalChange = false; }).catch(err => { isLocalChange = false; });
         });
         
         editor.addEventListener('paste', (e) => {
@@ -281,30 +347,21 @@
                 if (item.kind === 'file' && item.type.startsWith('image/')) {
                     const blob = item.getAsFile();
                     const reader = new FileReader();
-                    reader.onload = function(event) {
-                        document.execCommand('insertImage', false, event.target.result);
-                    };
-                    reader.readAsDataURL(blob);
-                    e.preventDefault(); return;
+                    reader.onload = function(event) { document.execCommand('insertImage', false, event.target.result); };
+                    reader.readAsDataURL(blob); e.preventDefault(); return;
                 }
             }
         });
 
-        copyBtn.addEventListener('click', async () => {
-            if (editor.getAttribute("contenteditable") === "false") return alert("Cannot copy encrypted data.");
+        document.getElementById('copy-btn').addEventListener('click', async () => {
+            if (editor.getAttribute("contenteditable") === "false") return alert("Cannot copy locked data.");
             try {
-                const clipboardItem = new ClipboardItem({
-                    'text/plain': new Blob([editor.innerText], { type: 'text/plain' }),
-                    'text/html': new Blob([editor.innerHTML], { type: 'text/html' })
-                });
-                await navigator.clipboard.write([clipboardItem]);
-                const originalText = copyBtn.innerText; copyBtn.innerText = "Copied!";
-                setTimeout(() => copyBtn.innerText = originalText, 2000);
+                await navigator.clipboard.write([new ClipboardItem({'text/plain': new Blob([editor.innerText], {type: 'text/plain'}), 'text/html': new Blob([editor.innerHTML], {type: 'text/html'})})]);
+                const btn = document.getElementById('copy-btn'); const orig = btn.innerText; btn.innerText = "Copied!"; setTimeout(() => btn.innerText = orig, 2000);
             } catch (err) {
                 try {
                     await navigator.clipboard.writeText(editor.innerText);
-                    const originalText = copyBtn.innerText; copyBtn.innerText = "Copied (Text Only)!";
-                    setTimeout(() => copyBtn.innerText = originalText, 2000);
+                    const btn = document.getElementById('copy-btn'); const orig = btn.innerText; btn.innerText = "Copied (Text Only)!"; setTimeout(() => btn.innerText = orig, 2000);
                 } catch(e) {}
             }
         });
