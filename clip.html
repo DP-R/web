@@ -184,9 +184,37 @@
             if (pin) { renderTabs(); decryptAndDisplayContent(rawContentSnapshot); }
         }
 
-        document.getElementById('admin-login-btn').onclick = () => savePin(mainPinInput.value);
+        function decryptTextWithPin(text, pinToTest) {
+            if (!text || typeof text !== 'string' || !text.startsWith("ENC:")) return text;
+            try { 
+                const res = CryptoJS.AES.decrypt(text.slice(4), pinToTest).toString(CryptoJS.enc.Utf8);
+                if (!res) return "🔒";
+                return res;
+            } catch (e) { return "🔒"; }
+        }
+
+        function handleManualLogin() {
+            const pin = mainPinInput.value;
+            if (!pin) return;
+            
+            // If data exists, verify the PIN is actually correct before letting them in
+            if (Object.keys(tabsData).length > 0) {
+                const firstTabMeta = Object.values(tabsData)[0];
+                if (firstTabMeta && firstTabMeta.name) {
+                    const test = decryptTextWithPin(firstTabMeta.name, pin);
+                    if (test === "🔒") {
+                        alert("❌ Incorrect Admin PIN!");
+                        mainPinInput.value = "";
+                        return;
+                    }
+                }
+            }
+            savePin(pin);
+        }
+
+        document.getElementById('admin-login-btn').onclick = handleManualLogin;
         mainPinInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') savePin(e.target.value);
+            if (e.key === 'Enter') handleManualLogin();
         });
         document.getElementById('lock-btn').onclick = () => { savePin(""); editor.innerHTML = ""; tabsData = {}; };
 
