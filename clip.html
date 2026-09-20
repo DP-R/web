@@ -59,7 +59,8 @@
         .tab.active {
             color: #4caf50;
             border-bottom: 2px solid #4caf50;
-            background-color: #1e1e1e;
+            background-color: #ffffff; /* Match editor background */
+            color: #1e1e1e;
         }
         .tab-delete {
             font-size: 1.3rem;
@@ -68,8 +69,8 @@
             border-radius: 50%;
             display: none;
         }
-        .tab.active .tab-delete { display: inline-block; }
-        .tab-delete:hover { color: #ff5555; }
+        .tab.active .tab-delete { display: inline-block; color: #888; }
+        .tab-delete:hover { color: #ff5555 !important; }
         
         .add-tab-btn {
             background: transparent;
@@ -81,12 +82,26 @@
         }
         .add-tab-btn:hover { color: #fff; }
 
-        textarea {
+        /* Rich Text Editor */
+        .editor {
             flex: 1; width: 100%; box-sizing: border-box;
-            background-color: #1e1e1e; color: #d4d4d4; border: none;
-            padding: 20px; font-size: 1.1rem; resize: none; outline: none;
-            font-family: 'Courier New', Courier, monospace;
+            background-color: #ffffff; /* White background for Excel/Word compatibility */
+            color: #000000; border: none;
+            padding: 20px; font-size: 1.1rem; outline: none;
+            overflow-y: auto;
+            font-family: system-ui, -apple-system, sans-serif;
         }
+        .editor[empty]:before {
+            content: attr(placeholder);
+            color: #888;
+            pointer-events: none;
+            display: block; /* For Firefox */
+        }
+        
+        /* Basic table borders if not provided by paste */
+        .editor table { border-collapse: collapse; }
+        .editor td, .editor th { border: 1px solid #ccc; padding: 4px 8px; }
+        .editor img { max-width: 100%; height: auto; }
     </style>
 </head>
 <body>
@@ -106,7 +121,8 @@
         <!-- Tabs injected dynamically -->
     </div>
 
-    <textarea id="clipboard" placeholder="Paste or type text here to sync across devices..." autofocus></textarea>
+    <!-- contenteditable div instead of textarea to support rich text/images -->
+    <div id="clipboard" class="editor" contenteditable="true" placeholder="Paste formatted text (Word/Excel) or images here to sync..."></div>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -130,7 +146,7 @@
         const tabsMetaRef = ref(db, 'clipboard/tabs-meta');
         const connectedRef = ref(db, '.info/connected');
 
-        const textarea = document.getElementById('clipboard');
+        const editor = document.getElementById('clipboard');
         const indicator = document.getElementById('indicator');
         const statusText = document.getElementById('status-text');
         const copyBtn = document.getElementById('copy-btn');
@@ -140,6 +156,16 @@
         let activeTabId = localStorage.getItem('activeTabId') || null;
         let unsubContent = null;
         let tabsData = {};
+
+        // Handle placeholder logic for contenteditable
+        function updatePlaceholder() {
+            if (editor.innerHTML.trim() === '' || editor.innerHTML === '<br>') {
+                editor.setAttribute('empty', '');
+            } else {
+                editor.removeAttribute('empty');
+            }
+        }
+        editor.addEventListener('input', updatePlaceholder);
 
         // Monitor connection
         onValue(connectedRef, (snap) => {
@@ -156,14 +182,12 @@
         onValue(tabsMetaRef, (snapshot) => {
             tabsData = snapshot.val() || {};
             
-            // Auto-create default tab if the entire object was deleted
             if (Object.keys(tabsData).length === 0) {
                 const defaultId = "tab_default";
                 set(ref(db, `clipboard/tabs-meta/${defaultId}`), { name: "Main" });
                 return;
             }
 
-            // Ensure active tab exists (in case someone deleted it from another device)
             if (!activeTabId || !tabsData[activeTabId]) {
                 activeTabId = Object.keys(tabsData)[0];
             }
@@ -209,7 +233,6 @@
                 tabEl.appendChild(nameSpan);
                 tabEl.appendChild(delBtn);
                 
-                // Click to switch
                 tabEl.onclick = () => {
                     if (activeTabId !== id) {
                         activeTabId = id;
@@ -222,7 +245,6 @@
                 tabsContainer.appendChild(tabEl);
             });
 
-            // Add Tab Button
             const addBtn = document.createElement('button');
             addBtn.className = 'add-tab-btn';
             addBtn.innerText = '+';
@@ -242,39 +264,81 @@
         function subscribeToActiveTab() {
             if (!activeTabId) return;
             
-            // Clean up old listener when switching tabs
             if (unsubContent) unsubContent();
             
-            textarea.value = ""; // clear momentarily
-            textarea.placeholder = "Loading...";
+            editor.innerHTML = "";
+            editor.setAttribute('placeholder', 'Loading...');
+            updatePlaceholder();
             
             const contentRef = ref(db, `clipboard/tabs-content/${activeTabId}`);
             unsubContent = onValue(contentRef, (snapshot) => {
                 if (!isLocalChange) {
-                    textarea.value = snapshot.val() || "";
-                    textarea.placeholder = "Paste or type text here to sync across devices...";
+                    editor.innerHTML = snapshot.val() || "";
+                    editor.setAttribute('placeholder', 'Paste formatted text (Word/Excel) or images here to sync...');
+                    updatePlaceholder();
                 }
             });
         }
 
-        // Push text changes
-        textarea.addEventListener('input', (e) => {
+        // Push text/html changes
+        editor.addEventListener('input', (e) => {
             if (!activeTabId) return;
             isLocalChange = true;
-            set(ref(db, `clipboard/tabs-content/${activeTabId}`), e.target.value)
+            
+            set(ref(db, `clipboard/tabs-content/${activeTabId}`), editor.innerHTML)
                 .then(() => { isLocalChange = false; })
                 .catch(err => { console.error(err); isLocalChange = false; });
         });
+        
+        // Custom Paste handler to intercept native image files pasted from clipboard
+        editor.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let index in items) {
+                const item = items[index];
+                if (item.kind === 'file' && item.type.startsWith('image/')) {
+                    // It's an image file! Read it as base64 and insert it properly.
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const base64 = event.target.result;
+                        // Insert the image into the editor
+                        document.execCommand('insertImage', false, base64);
+                    };
+                    reader.readAsDataURL(blob);
+                    e.preventDefault(); // Stop default blob pasting
+                    return;
+                }
+            }
+            // For Excel/Word/Text, let the browser handle it naturally so it preserves HTML!
+        });
 
-        // Copy button
+        // Copy button: Writes BOTH Rich Text and Plain Text to your OS clipboard
         copyBtn.addEventListener('click', async () => {
             try {
-                await navigator.clipboard.writeText(textarea.value);
+                const html = editor.innerHTML;
+                const plainText = editor.innerText;
+
+                // Create blobs for clipboard API
+                const clipboardItem = new ClipboardItem({
+                    'text/plain': new Blob([plainText], { type: 'text/plain' }),
+                    'text/html': new Blob([html], { type: 'text/html' })
+                });
+                
+                await navigator.clipboard.write([clipboardItem]);
+
                 const originalText = copyBtn.innerText;
                 copyBtn.innerText = "Copied!";
                 setTimeout(() => copyBtn.innerText = originalText, 2000);
             } catch (err) {
-                alert("Failed to copy");
+                console.error("Rich text copy failed, falling back to plain text", err);
+                try {
+                    await navigator.clipboard.writeText(editor.innerText);
+                    const originalText = copyBtn.innerText;
+                    copyBtn.innerText = "Copied (Text Only)!";
+                    setTimeout(() => copyBtn.innerText = originalText, 2000);
+                } catch(e) {
+                    alert("Failed to copy");
+                }
             }
         });
     </script>
