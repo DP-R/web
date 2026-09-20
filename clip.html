@@ -60,7 +60,7 @@
         .tab:hover { color: #fff; }
         .tab.active {
             color: #4caf50; border-bottom: 2px solid #4caf50;
-            background-color: #ffffff; color: #1e1e1e;
+            background-color: #000000; color: #d4d4d4;
         }
         .tab-delete { font-size: 1.3rem; line-height: 1; padding: 0 4px; border-radius: 50%; display: none; }
         .tab.active .tab-delete { display: inline-block; color: #888; }
@@ -75,11 +75,14 @@
             color: #000000; border: none; padding: 20px; font-size: 1.1rem; outline: none;
             overflow-y: auto; font-family: system-ui, -apple-system, sans-serif;
             transition: opacity 0.2s;
+            /* Magic Dark Mode: Inverts the white background to black, and black text to white for your eyes only */
+            filter: invert(1) hue-rotate(180deg);
         }
         .editor[empty]:before { content: attr(placeholder); color: #888; pointer-events: none; display: block; }
         .editor table { border-collapse: collapse; }
         .editor td, .editor th { border: 1px solid #ccc; padding: 4px 8px; }
-        .editor img { max-width: 100%; height: auto; }
+        /* Re-invert images so they don't look like negative x-rays */
+        .editor img { max-width: 100%; height: auto; filter: invert(1) hue-rotate(180deg); }
     </style>
 </head>
 <body>
