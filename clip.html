@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Clipboard Tabs</title>
+    <!-- CryptoJS for End-to-End Encryption -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         body, html {
             margin: 0;
@@ -23,10 +25,19 @@
             align-items: center;
         }
         h1 { margin: 0; font-size: 1.2rem; color: #fff; }
-        .header-right { display: flex; align-items: center; gap: 20px; }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        
+        .pin-input {
+            background: #1e1e1e; color: #4caf50; border: 1px solid #4caf50;
+            padding: 6px 10px; border-radius: 4px; width: 100px;
+            outline: none; font-size: 0.9rem; transition: width 0.3s;
+        }
+        .pin-input:focus { width: 150px; background: #fff; color: #000; }
+        
         #status { font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
         .indicator { width: 10px; height: 10px; border-radius: 50%; background-color: #f44336; }
         .indicator.online { background-color: #4caf50; }
+        
         button.btn-main {
             background: #4caf50; color: white; border: none; padding: 8px 16px;
             border-radius: 4px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;
@@ -35,70 +46,37 @@
         
         /* Tabs Bar */
         .tabs-container {
-            display: flex;
-            background-color: #252525;
-            border-bottom: 1px solid #3d3d3d;
-            padding: 0 10px;
-            overflow-x: auto;
+            display: flex; background-color: #252525; border-bottom: 1px solid #3d3d3d;
+            padding: 0 10px; overflow-x: auto;
         }
         .tabs-container::-webkit-scrollbar { height: 4px; }
         .tabs-container::-webkit-scrollbar-thumb { background: #4a4a4a; }
 
         .tab {
-            padding: 12px 20px;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            color: #a0a0a0;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            white-space: nowrap;
+            padding: 12px 20px; cursor: pointer; border-bottom: 2px solid transparent;
+            color: #a0a0a0; user-select: none; display: flex; align-items: center;
+            gap: 10px; white-space: nowrap;
         }
         .tab:hover { color: #fff; }
         .tab.active {
-            color: #4caf50;
-            border-bottom: 2px solid #4caf50;
-            background-color: #ffffff; /* Match editor background */
-            color: #1e1e1e;
+            color: #4caf50; border-bottom: 2px solid #4caf50;
+            background-color: #ffffff; color: #1e1e1e;
         }
-        .tab-delete {
-            font-size: 1.3rem;
-            line-height: 1;
-            padding: 0 4px;
-            border-radius: 50%;
-            display: none;
-        }
+        .tab-delete { font-size: 1.3rem; line-height: 1; padding: 0 4px; border-radius: 50%; display: none; }
         .tab.active .tab-delete { display: inline-block; color: #888; }
         .tab-delete:hover { color: #ff5555 !important; }
         
-        .add-tab-btn {
-            background: transparent;
-            color: #a0a0a0;
-            font-size: 1.5rem;
-            padding: 5px 15px;
-            border: none;
-            cursor: pointer;
-        }
+        .add-tab-btn { background: transparent; color: #a0a0a0; font-size: 1.5rem; padding: 5px 15px; border: none; cursor: pointer; }
         .add-tab-btn:hover { color: #fff; }
 
         /* Rich Text Editor */
         .editor {
-            flex: 1; width: 100%; box-sizing: border-box;
-            background-color: #ffffff; /* White background for Excel/Word compatibility */
-            color: #000000; border: none;
-            padding: 20px; font-size: 1.1rem; outline: none;
-            overflow-y: auto;
-            font-family: system-ui, -apple-system, sans-serif;
+            flex: 1; width: 100%; box-sizing: border-box; background-color: #ffffff;
+            color: #000000; border: none; padding: 20px; font-size: 1.1rem; outline: none;
+            overflow-y: auto; font-family: system-ui, -apple-system, sans-serif;
+            transition: opacity 0.2s;
         }
-        .editor[empty]:before {
-            content: attr(placeholder);
-            color: #888;
-            pointer-events: none;
-            display: block; /* For Firefox */
-        }
-        
-        /* Basic table borders if not provided by paste */
+        .editor[empty]:before { content: attr(placeholder); color: #888; pointer-events: none; display: block; }
         .editor table { border-collapse: collapse; }
         .editor td, .editor th { border: 1px solid #ccc; padding: 4px 8px; }
         .editor img { max-width: 100%; height: auto; }
@@ -109,22 +87,17 @@
     <header>
         <h1>Live Clipboard</h1>
         <div class="header-right">
+            <input type="password" id="pin-input" class="pin-input" placeholder="Secret PIN" title="Enter PIN to encrypt your data end-to-end">
             <div id="status">
                 <div id="indicator" class="indicator"></div>
-                <span id="status-text">Disconnected</span>
             </div>
-            <button class="btn-main" id="copy-btn">Copy to Clipboard</button>
+            <button class="btn-main" id="copy-btn">Copy</button>
         </div>
     </header>
 
-    <div class="tabs-container" id="tabs-container">
-        <!-- Tabs injected dynamically -->
-    </div>
+    <div class="tabs-container" id="tabs-container"></div>
+    <div id="clipboard" class="editor" contenteditable="true" placeholder="Paste formatted text or images here to sync..."></div>
 
-    <!-- contenteditable div instead of textarea to support rich text/images -->
-    <div id="clipboard" class="editor" contenteditable="true" placeholder="Paste formatted text (Word/Excel) or images here to sync..."></div>
-
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, set, remove, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -136,8 +109,7 @@
             projectId: "my-clipboard-b96fc",
             storageBucket: "my-clipboard-b96fc.firebasestorage.app",
             messagingSenderId: "599514202906",
-            appId: "1:599514202906:web:538098a893cd0c9431e2a3",
-            measurementId: "G-RX1Z0RHGZR"
+            appId: "1:599514202906:web:538098a893cd0c9431e2a3"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -148,197 +120,189 @@
 
         const editor = document.getElementById('clipboard');
         const indicator = document.getElementById('indicator');
-        const statusText = document.getElementById('status-text');
         const copyBtn = document.getElementById('copy-btn');
         const tabsContainer = document.getElementById('tabs-container');
+        const pinInput = document.getElementById('pin-input');
 
         let isLocalChange = false;
         let activeTabId = localStorage.getItem('activeTabId') || null;
         let unsubContent = null;
         let tabsData = {};
+        let rawContentSnapshot = ""; // Store raw data to re-decrypt when PIN changes
 
-        // Handle placeholder logic for contenteditable
-        function updatePlaceholder() {
-            if (editor.innerHTML.trim() === '' || editor.innerHTML === '<br>') {
-                editor.setAttribute('empty', '');
-            } else {
-                editor.removeAttribute('empty');
+        // Setup PIN
+        const savedPin = localStorage.getItem('clip_pin');
+        if (savedPin) pinInput.value = savedPin;
+
+        pinInput.addEventListener('input', (e) => {
+            localStorage.setItem('clip_pin', e.target.value);
+            renderTabs(); 
+            // Re-decrypt current content without re-fetching
+            decryptAndDisplayContent(rawContentSnapshot);
+        });
+
+        function encryptText(text) {
+            const pin = pinInput.value;
+            if (!pin) return text;
+            try { return "ENC:" + CryptoJS.AES.encrypt(text, pin).toString(); } 
+            catch(e) { return text; }
+        }
+
+        function decryptText(text) {
+            if (!text || typeof text !== 'string' || !text.startsWith("ENC:")) return text;
+            const pin = pinInput.value;
+            if (!pin) return "🔒 [Encrypted - Enter PIN to view]";
+            try {
+                const decrypted = CryptoJS.AES.decrypt(text.slice(4), pin).toString(CryptoJS.enc.Utf8);
+                return decrypted || "🔒 [Wrong PIN]";
+            } catch (e) {
+                return "🔒 [Wrong PIN]";
             }
+        }
+
+        function updatePlaceholder() {
+            if (editor.innerHTML.trim() === '' || editor.innerHTML === '<br>') editor.setAttribute('empty', '');
+            else editor.removeAttribute('empty');
         }
         editor.addEventListener('input', updatePlaceholder);
 
-        // Monitor connection
         onValue(connectedRef, (snap) => {
-            if (snap.val() === true) {
-                indicator.classList.add('online');
-                statusText.innerText = "Online & Synced";
-            } else {
-                indicator.classList.remove('online');
-                statusText.innerText = "Disconnected";
-            }
+            if (snap.val() === true) indicator.classList.add('online');
+            else indicator.classList.remove('online');
         });
 
-        // Fetch Tab Metadata
         onValue(tabsMetaRef, (snapshot) => {
             tabsData = snapshot.val() || {};
-            
             if (Object.keys(tabsData).length === 0) {
-                const defaultId = "tab_default";
-                set(ref(db, `clipboard/tabs-meta/${defaultId}`), { name: "Main" });
+                set(ref(db, `clipboard/tabs-meta/tab_default`), { name: encryptText("Main") });
                 return;
             }
-
-            if (!activeTabId || !tabsData[activeTabId]) {
-                activeTabId = Object.keys(tabsData)[0];
-            }
-
+            if (!activeTabId || !tabsData[activeTabId]) activeTabId = Object.keys(tabsData)[0];
             renderTabs();
             subscribeToActiveTab();
         });
 
         function renderTabs() {
             tabsContainer.innerHTML = '';
-            
             Object.entries(tabsData).forEach(([id, meta]) => {
                 const tabEl = document.createElement('div');
                 tabEl.className = `tab ${id === activeTabId ? 'active' : ''}`;
                 
+                const decryptedName = decryptText(meta.name);
+                
                 const nameSpan = document.createElement('span');
-                nameSpan.innerText = meta.name;
-                nameSpan.title = "Double click to rename";
+                nameSpan.innerText = decryptedName;
                 nameSpan.ondblclick = (e) => {
                     e.stopPropagation();
-                    const newName = prompt("Enter new tab name:", meta.name);
+                    if (decryptedName.startsWith("🔒")) return alert("Enter correct PIN before renaming.");
+                    const newName = prompt("Enter new tab name:", decryptedName);
                     if (newName && newName.trim() !== "") {
-                        set(ref(db, `clipboard/tabs-meta/${id}/name`), newName.trim());
+                        set(ref(db, `clipboard/tabs-meta/${id}/name`), encryptText(newName.trim()));
                     }
                 };
                 
                 const delBtn = document.createElement('span');
-                delBtn.className = 'tab-delete';
-                delBtn.innerHTML = '&times;';
-                delBtn.title = "Delete tab";
+                delBtn.className = 'tab-delete'; delBtn.innerHTML = '&times;';
                 delBtn.onclick = (e) => {
                     e.stopPropagation();
-                    if (Object.keys(tabsData).length === 1) {
-                        alert("Cannot delete the last tab.");
-                        return;
-                    }
-                    if (confirm(`Delete tab "${meta.name}"?`)) {
+                    if (Object.keys(tabsData).length === 1) return alert("Cannot delete the last tab.");
+                    if (confirm(`Delete tab "${decryptedName}"?`)) {
                         remove(ref(db, `clipboard/tabs-meta/${id}`));
                         remove(ref(db, `clipboard/tabs-content/${id}`));
                     }
                 };
 
-                tabEl.appendChild(nameSpan);
-                tabEl.appendChild(delBtn);
-                
+                tabEl.appendChild(nameSpan); tabEl.appendChild(delBtn);
                 tabEl.onclick = () => {
                     if (activeTabId !== id) {
-                        activeTabId = id;
-                        localStorage.setItem('activeTabId', id);
-                        renderTabs();
-                        subscribeToActiveTab();
+                        activeTabId = id; localStorage.setItem('activeTabId', id);
+                        renderTabs(); subscribeToActiveTab();
                     }
                 };
-                
                 tabsContainer.appendChild(tabEl);
             });
 
             const addBtn = document.createElement('button');
-            addBtn.className = 'add-tab-btn';
-            addBtn.innerText = '+';
-            addBtn.title = "New Tab";
+            addBtn.className = 'add-tab-btn'; addBtn.innerText = '+';
             addBtn.onclick = () => {
                 const name = prompt("Enter tab name:", "New Tab");
                 if (name && name.trim() !== "") {
                     const newRef = push(tabsMetaRef);
-                    set(newRef, { name: name.trim() });
-                    activeTabId = newRef.key;
-                    localStorage.setItem('activeTabId', activeTabId);
+                    set(newRef, { name: encryptText(name.trim()) });
+                    activeTabId = newRef.key; localStorage.setItem('activeTabId', activeTabId);
                 }
             };
             tabsContainer.appendChild(addBtn);
         }
 
+        function decryptAndDisplayContent(raw) {
+            const decrypted = decryptText(raw);
+            editor.innerHTML = decrypted;
+            if (decrypted.startsWith("🔒")) {
+                editor.setAttribute("contenteditable", "false");
+                editor.style.opacity = "0.5";
+            } else {
+                editor.setAttribute("contenteditable", "true");
+                editor.style.opacity = "1";
+            }
+            updatePlaceholder();
+        }
+
         function subscribeToActiveTab() {
             if (!activeTabId) return;
-            
             if (unsubContent) unsubContent();
             
             editor.innerHTML = "";
-            editor.setAttribute('placeholder', 'Loading...');
             updatePlaceholder();
             
-            const contentRef = ref(db, `clipboard/tabs-content/${activeTabId}`);
-            unsubContent = onValue(contentRef, (snapshot) => {
+            unsubContent = onValue(ref(db, `clipboard/tabs-content/${activeTabId}`), (snapshot) => {
                 if (!isLocalChange) {
-                    editor.innerHTML = snapshot.val() || "";
-                    editor.setAttribute('placeholder', 'Paste formatted text (Word/Excel) or images here to sync...');
-                    updatePlaceholder();
+                    rawContentSnapshot = snapshot.val() || "";
+                    decryptAndDisplayContent(rawContentSnapshot);
                 }
             });
         }
 
-        // Push text/html changes
         editor.addEventListener('input', (e) => {
-            if (!activeTabId) return;
+            if (!activeTabId || editor.getAttribute("contenteditable") === "false") return;
             isLocalChange = true;
-            
-            set(ref(db, `clipboard/tabs-content/${activeTabId}`), editor.innerHTML)
+            set(ref(db, `clipboard/tabs-content/${activeTabId}`), encryptText(editor.innerHTML))
                 .then(() => { isLocalChange = false; })
-                .catch(err => { console.error(err); isLocalChange = false; });
+                .catch(err => { isLocalChange = false; });
         });
         
-        // Custom Paste handler to intercept native image files pasted from clipboard
         editor.addEventListener('paste', (e) => {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             for (let index in items) {
                 const item = items[index];
                 if (item.kind === 'file' && item.type.startsWith('image/')) {
-                    // It's an image file! Read it as base64 and insert it properly.
                     const blob = item.getAsFile();
                     const reader = new FileReader();
                     reader.onload = function(event) {
-                        const base64 = event.target.result;
-                        // Insert the image into the editor
-                        document.execCommand('insertImage', false, base64);
+                        document.execCommand('insertImage', false, event.target.result);
                     };
                     reader.readAsDataURL(blob);
-                    e.preventDefault(); // Stop default blob pasting
-                    return;
+                    e.preventDefault(); return;
                 }
             }
-            // For Excel/Word/Text, let the browser handle it naturally so it preserves HTML!
         });
 
-        // Copy button: Writes BOTH Rich Text and Plain Text to your OS clipboard
         copyBtn.addEventListener('click', async () => {
+            if (editor.getAttribute("contenteditable") === "false") return alert("Cannot copy encrypted data.");
             try {
-                const html = editor.innerHTML;
-                const plainText = editor.innerText;
-
-                // Create blobs for clipboard API
                 const clipboardItem = new ClipboardItem({
-                    'text/plain': new Blob([plainText], { type: 'text/plain' }),
-                    'text/html': new Blob([html], { type: 'text/html' })
+                    'text/plain': new Blob([editor.innerText], { type: 'text/plain' }),
+                    'text/html': new Blob([editor.innerHTML], { type: 'text/html' })
                 });
-                
                 await navigator.clipboard.write([clipboardItem]);
-
-                const originalText = copyBtn.innerText;
-                copyBtn.innerText = "Copied!";
+                const originalText = copyBtn.innerText; copyBtn.innerText = "Copied!";
                 setTimeout(() => copyBtn.innerText = originalText, 2000);
             } catch (err) {
-                console.error("Rich text copy failed, falling back to plain text", err);
                 try {
                     await navigator.clipboard.writeText(editor.innerText);
-                    const originalText = copyBtn.innerText;
-                    copyBtn.innerText = "Copied (Text Only)!";
+                    const originalText = copyBtn.innerText; copyBtn.innerText = "Copied (Text Only)!";
                     setTimeout(() => copyBtn.innerText = originalText, 2000);
-                } catch(e) {
-                    alert("Failed to copy");
-                }
+                } catch(e) {}
             }
         });
     </script>
