@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Clipboard</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            padding: 15px 20px;
+            background-color: #2d2d2d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3d3d3d;
+        }
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        #status {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #f44336; /* red default */
+        }
+        .indicator.online {
+            background-color: #4caf50;
+        }
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        textarea {
+            flex: 1;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            padding: 20px;
+            font-size: 1.1rem;
+            resize: none;
+            outline: none;
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Live Clipboard</h1>
+        <div class="header-right">
+            <div id="status">
+                <div id="indicator" class="indicator"></div>
+                <span id="status-text">Disconnected</span>
+            </div>
+            <button id="copy-btn">Copy to Clipboard</button>
+        </div>
+    </header>
+
+    <textarea id="clipboard" placeholder="Paste or type text here to sync across devices..." autofocus></textarea>
+
+    <!-- Firebase SDK (Modular V10) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // ==========================================
+        // Firebase Config
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBJ9y1yA231l5DBpHdQJUsxdkYHlM_lPE",
+            authDomain: "my-clipboard-b96fc.firebaseapp.com",
+            databaseURL: "https://my-clipboard-b96fc-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "my-clipboard-b96fc",
+            storageBucket: "my-clipboard-b96fc.firebasestorage.app",
+            messagingSenderId: "599514202906",
+            appId: "1:599514202906:web:538098a893cd0c9431e2a3",
+            measurementId: "G-RX1Z0RHGZR"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        // Database References
+        const clipboardRef = ref(db, 'clipboard/shared-text');
+        const connectedRef = ref(db, '.info/connected');
+
+        // UI Elements
+        const textarea = document.getElementById('clipboard');
+        const indicator = document.getElementById('indicator');
+        const statusText = document.getElementById('status-text');
+        const copyBtn = document.getElementById('copy-btn');
+
+        let isLocalChange = false;
+
+        // Monitor connection status
+        onValue(connectedRef, (snap) => {
+            if (snap.val() === true) {
+                indicator.classList.add('online');
+                statusText.innerText = "Online & Synced";
+            } else {
+                indicator.classList.remove('online');
+                statusText.innerText = "Disconnected";
+            }
+        });
+
+        // Listen for changes from Firebase
+        onValue(clipboardRef, (snapshot) => {
+            const data = snapshot.val() || "";
+            if (!isLocalChange) {
+                textarea.value = data;
+            }
+        });
+
+        // Push changes to Firebase when typing/pasting
+        textarea.addEventListener('input', (e) => {
+            isLocalChange = true;
+            set(clipboardRef, e.target.value)
+                .then(() => {
+                    isLocalChange = false;
+                })
+                .catch((error) => {
+                    console.error("Error writing to database:", error);
+                    isLocalChange = false;
+                });
+        });
+
+        // Copy button functionality
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(textarea.value);
+                const originalText = copyBtn.innerText;
+                copyBtn.innerText = "Copied!";
+                setTimeout(() => {
+                    copyBtn.innerText = originalText;
+                }, 2000);
+            } catch (err) {
+                console.error("Failed to copy text:", err);
+                alert("Failed to copy to clipboard.");
+            }
+        });
+    </script>
+</body>
+</html>
