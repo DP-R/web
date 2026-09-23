@@ -550,7 +550,10 @@
                     }
 
                     let html = `<div class="admin-room-card" style="border: 2px solid #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                        <h2 style="margin-top:0; color:#2196f3; border-bottom: 1px solid #333; padding-bottom: 10px;">Room: ${rName} <span style="font-size:0.9rem; color:#888;">(Pass: ${decPass})</span></h2>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
+                            <h2 style="margin:0; color:#2196f3;">Room: ${rName} <span style="font-size:0.9rem; color:#888;">(Pass: ${decPass})</span></h2>
+                            <button class="btn-main btn-danger" style="padding: 6px 12px; font-size: 0.85rem;" onclick="deleteRoom('${rName}')">🗑️ Force Delete Room</button>
+                        </div>
                         
                         <h3 style="color:#a0a0a0; margin-bottom: 10px; font-size: 1rem;">Live Tab Contents:</h3>
                         ${tabsContentHTML}
@@ -580,6 +583,12 @@
                 });
             });
         }
+
+        window.deleteRoom = (rName) => {
+            if(confirm(`🚨 WARNING: Are you sure you want to permanently delete the room "${rName}" and all its contents?`)) {
+                remove(dbRef(db, `clipboard_v3/rooms/${rName}`));
+            }
+        };
 
         window.blockDevice = (deviceId) => {
             if(confirm(`Are you sure you want to PERMANENTLY BLOCK device: ${deviceId}?`)) {
