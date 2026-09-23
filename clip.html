@@ -64,6 +64,15 @@
             <input type="password" id="room-pass-input" placeholder="Room Password">
             <button class="btn-main" id="login-btn" style="width: 100%; padding: 12px; font-size: 1.1rem;">Join / Create Room</button>
         </div>
+        
+        <!-- ACTIVE ROOMS SECTION -->
+        <div style="margin-top: 25px; max-width: 450px; width: 100%;">
+            <h3 style="color: #a0a0a0; font-size: 1rem; border-bottom: 1px solid #333; padding-bottom: 5px; text-align: left; margin-bottom: 15px;">Active Rooms:</h3>
+            <div id="active-rooms-list" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-start;">
+                <span style="color: #666; font-style: italic; font-size: 0.9rem;">Loading rooms...</span>
+            </div>
+        </div>
+
         <p style="color: #666; font-size: 0.8rem; margin-top: 20px;">Device ID: <span id="public-device-id">---</span></p>
         
         <!-- INSTRUCTIONS BLOCK -->
@@ -151,6 +160,33 @@
         let myDeviceId = localStorage.getItem('clip_device_id');
         if (!myDeviceId) { myDeviceId = Math.random().toString(36).substr(2, 6).toUpperCase(); localStorage.setItem('clip_device_id', myDeviceId); }
         document.getElementById('public-device-id').innerText = myDeviceId;
+
+        // Load Active Rooms into Login Screen
+        onValue(dbRef(db, 'clipboard_v3/rooms'), snap => {
+            const list = document.getElementById('active-rooms-list');
+            if (!list) return;
+            const rooms = snap.val() || {};
+            const roomNames = Object.keys(rooms);
+            
+            if (roomNames.length === 0) {
+                list.innerHTML = `<span style="color: #666; font-style: italic; font-size: 0.9rem;">No active rooms found.</span>`;
+                return;
+            }
+            
+            list.innerHTML = "";
+            roomNames.forEach(rName => {
+                const badge = document.createElement('div');
+                badge.style.cssText = "background: #2a2a2a; color: #4caf50; padding: 6px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; border: 1px solid #444; transition: 0.2s; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.3);";
+                badge.innerText = "🏠 " + rName;
+                badge.onmouseover = () => badge.style.background = "#3d3d3d";
+                badge.onmouseout = () => badge.style.background = "#2a2a2a";
+                badge.onclick = () => {
+                    document.getElementById('room-name-input').value = rName;
+                    document.getElementById('room-pass-input').focus();
+                };
+                list.appendChild(badge);
+            });
+        });
 
         // App State
         let currentRoom = null;
