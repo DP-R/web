@@ -406,27 +406,40 @@
         }
         editor.addEventListener('input', triggerSync);
         
-        function handleFileUpload(file) {
+        async function handleFileUpload(file) {
             if (!file) return;
-            if (file.size > 3 * 1024 * 1024) {
-                alert("File is too large for the database. Please keep files under 3MB.");
+            if (file.size > 35 * 1024 * 1024) {
+                alert("File is too large for the Google Drive Proxy (Max 35MB).");
                 return;
             }
             const tempId = "upload_" + Date.now();
-            document.execCommand('insertHTML', false, `<span id="${tempId}" style="color: #ff9800;">[Processing ${file.name}...]</span> `);
+            document.execCommand('insertHTML', false, `<span id="${tempId}" style="color: #ff9800;">[Uploading ${file.name} to Google Drive...]</span> `);
             triggerSync();
             
             const reader = new FileReader();
-            reader.onload = function(event) {
-                const base64 = event.target.result;
-                const span = document.getElementById(tempId);
-                if (span) {
-                    let html = `<a href="${base64}" download="${file.name}" style="color: #2196f3; text-decoration: underline; font-weight: bold; background: #222; padding: 4px 8px; border-radius: 4px; border: 1px solid #444; display: inline-block; margin: 4px 0;">📎 Download: ${file.name}</a>&nbsp;`;
-                    if (file.type.startsWith('image/')) {
-                        html = `<br><a href="${base64}" download="${file.name}"><img src="${base64}" style="max-height: 300px; max-width: 100%; border-radius: 8px; margin: 10px 0; border: 1px solid #444;"></a><br>`;
+            reader.onload = async function(event) {
+                const base64Str = event.target.result.split(',')[1];
+                try {
+                    const res = await fetch("https://script.google.com/macros/s/AKfycby1uWE2s1BR9u0iLuQSTDy08ZVQTumqZYxHcRIdB5UwMsg58zrelihUsJSaLmLmfdf9/exec", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ fileData: { name: file.name, type: file.type, base64: base64Str }, folderName: currentRoom })
+                    });
+                    const result = await res.json();
+                    
+                    const span = document.getElementById(tempId);
+                    if (span && result.success) {
+                        let html = `<a href="${result.url}" target="_blank" style="color: #4caf50; text-decoration: underline; font-weight: bold; background: #222; padding: 6px 10px; border-radius: 4px; border: 1px solid #444; display: inline-block; margin: 4px 0;">☁️ Open in Google Drive: ${file.name}</a>&nbsp;`;
+                        span.outerHTML = html;
+                        triggerSync();
+                    } else if (span) {
+                        span.innerText = `[Failed: ${result.error || 'Server error'}]`;
+                        span.style.color = 'red';
+                        triggerSync();
                     }
-                    span.outerHTML = html;
-                    triggerSync();
+                } catch (e) {
+                    const span = document.getElementById(tempId);
+                    if (span) { span.innerText = `[Network Error]`; span.style.color = 'red'; triggerSync(); }
                 }
             };
             reader.readAsDataURL(file);
