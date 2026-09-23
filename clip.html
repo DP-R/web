@@ -406,16 +406,51 @@
         }
         editor.addEventListener('input', triggerSync);
         
+        function handleFileUpload(file) {
+            if (!file) return;
+            if (file.size > 3 * 1024 * 1024) {
+                alert("File is too large for the database. Please keep files under 3MB.");
+                return;
+            }
+            const tempId = "upload_" + Date.now();
+            document.execCommand('insertHTML', false, `<span id="${tempId}" style="color: #ff9800;">[Processing ${file.name}...]</span> `);
+            triggerSync();
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const base64 = event.target.result;
+                const span = document.getElementById(tempId);
+                if (span) {
+                    let html = `<a href="${base64}" download="${file.name}" style="color: #2196f3; text-decoration: underline; font-weight: bold; background: #222; padding: 4px 8px; border-radius: 4px; border: 1px solid #444; display: inline-block; margin: 4px 0;">📎 Download: ${file.name}</a>&nbsp;`;
+                    if (file.type.startsWith('image/')) {
+                        html = `<br><a href="${base64}" download="${file.name}"><img src="${base64}" style="max-height: 300px; max-width: 100%; border-radius: 8px; margin: 10px 0; border: 1px solid #444;"></a><br>`;
+                    }
+                    span.outerHTML = html;
+                    triggerSync();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        editor.addEventListener('dragover', (e) => { e.preventDefault(); editor.style.boxShadow = "inset 0 0 0 3px #4caf50"; });
+        editor.addEventListener('dragleave', (e) => { e.preventDefault(); editor.style.boxShadow = "none"; });
+        editor.addEventListener('drop', (e) => {
+            e.preventDefault(); editor.style.boxShadow = "none";
+            if (editor.getAttribute("contenteditable") === "false") return;
+            if (e.dataTransfer.files.length > 0) handleFileUpload(e.dataTransfer.files[0]);
+        });
+
         editor.addEventListener('paste', (e) => {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            let fileFound = false;
             for (let index in items) {
                 const item = items[index];
-                if (item.kind === 'file' && item.type.startsWith('image/')) {
-                    const blob = item.getAsFile(); const reader = new FileReader();
-                    reader.onload = function(event) { document.execCommand('insertImage', false, event.target.result); triggerSync(); };
-                    reader.readAsDataURL(blob); e.preventDefault(); return;
+                if (item.kind === 'file') {
+                    handleFileUpload(item.getAsFile());
+                    fileFound = true;
                 }
             }
+            if (fileFound) e.preventDefault();
         });
 
         document.getElementById('copy-btn').onclick = async () => {
