@@ -47,6 +47,11 @@
         .admin-room-card { background: #2a2a2a; border: 1px solid #444; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: left; }
         .user-block { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 10px; border-radius: 6px; margin-top: 10px; }
         .fingerprint-block { font-size: 0.75rem; color: #aaa; background: #111; padding: 10px; border-radius: 4px; font-family: monospace; word-break: break-word; margin-top: 5px; line-height: 1.4; }
+        .file-card { display:inline-block; border:1px solid #444; background:#252525; border-radius:8px; padding:12px; margin:5px; width:220px; vertical-align:top; user-select:none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .file-card-name { font-weight:bold; color:#4caf50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:5px; font-size: 0.95rem;}
+        .file-card-size { font-size:0.8rem; color:#888; margin-bottom:12px; }
+        .file-card-btn { display:block; background:#2196f3; color:#fff; text-align:center; padding:8px; border-radius:6px; text-decoration:none; font-size:0.9rem; font-weight:bold; transition: 0.2s;}
+        .file-card-btn:hover { background: #1976d2; }
     </style>
 </head>
 <body>
@@ -144,6 +149,15 @@
             </div>
             <button class="btn-main" style="margin-top: 25px; width: 100%;" onclick="document.getElementById('host-modal').classList.remove('active')">Close</button>
         </div>
+    </div>
+
+    <!-- Aether Drop Floating Manager -->
+    <div id="upload-manager" style="display:none; position:fixed; bottom:20px; right:20px; width:320px; background:#1e1e1e; border:1px solid #333; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,0.8); z-index:9999; padding:15px; font-family:sans-serif;">
+        <h4 style="margin:0 0 12px 0; color:#fff; border-bottom:1px solid #333; padding-bottom:8px; display:flex; align-items:center; gap:8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2196f3" stroke-width="2" style="width:18px; height:18px;"><path d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path></svg>
+            Aether Drop Transfers
+        </h4>
+        <div id="upload-queue" style="max-height:250px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;"></div>
     </div>
 
     <script type="module">
@@ -456,16 +470,46 @@
         }
         editor.addEventListener('input', triggerSync);
         
+        const uploadQueue = document.getElementById('upload-queue');
+        const uploadManager = document.getElementById('upload-manager');
+        let activeUploads = 0;
+
         async function handleFileUpload(file) {
             if (!file) return;
             if (file.size > 35 * 1024 * 1024) {
-                alert("File is too large for the Google Drive Proxy (Max 35MB).");
+                alert(`File "${file.name}" is too large for the Aether Drop proxy (Max 35MB).`);
                 return;
             }
-            const tempId = "upload_" + Date.now();
-            document.execCommand('insertHTML', false, `<span id="${tempId}" style="color: #ff9800;">[Uploading ${file.name} to Google Drive...]</span> `);
-            triggerSync();
             
+            uploadManager.style.display = 'block';
+            activeUploads++;
+            const fileId = "uf_" + Date.now() + Math.floor(Math.random()*1000);
+            
+            // Add placeholder to editor synchronously so it stays exactly where they dropped it
+            document.execCommand('insertHTML', false, `<span id="ph_${fileId}" style="color:#ff9800; border:1px dashed #ff9800; padding:4px 8px; border-radius:4px;">[Uploading ${file.name}...]</span>&nbsp;`);
+            triggerSync();
+
+            // Add to UI Queue
+            const qItem = document.createElement('div');
+            qItem.innerHTML = `
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px; color:#ddd; font-weight:bold;">
+                    <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:230px;">${file.name}</span>
+                    <span id="${fileId}_pct">0%</span>
+                </div>
+                <div style="width:100%; height:8px; background:#111; border-radius:4px; overflow:hidden;">
+                    <div id="${fileId}_bar" style="width:0%; height:100%; background:#2196f3; transition:width 0.4s ease-out;"></div>
+                </div>
+            `;
+            uploadQueue.appendChild(qItem);
+            
+            // Progress Simulation
+            let progress = 5;
+            const pInt = setInterval(() => {
+                if (progress < 90) progress += Math.floor(Math.random() * 8) + 2;
+                document.getElementById(`${fileId}_pct`).innerText = progress + '%';
+                document.getElementById(`${fileId}_bar`).style.width = progress + '%';
+            }, 500);
+
             const reader = new FileReader();
             reader.onload = async function(event) {
                 const base64Str = event.target.result.split(',')[1];
@@ -477,19 +521,42 @@
                     });
                     const result = await res.json();
                     
-                    const span = document.getElementById(tempId);
-                    if (span && result.success) {
-                        let html = `<a href="${result.url}" target="_blank" style="color: #4caf50; text-decoration: underline; font-weight: bold; background: #222; padding: 6px 10px; border-radius: 4px; border: 1px solid #444; display: inline-block; margin: 4px 0;">☁️ Open in Google Drive: ${file.name}</a>&nbsp;`;
-                        span.outerHTML = html;
-                        triggerSync();
-                    } else if (span) {
-                        span.innerText = `[Failed: ${result.error || 'Server error'}]`;
-                        span.style.color = 'red';
+                    clearInterval(pInt);
+                    document.getElementById(`${fileId}_pct`).innerText = '100%';
+                    document.getElementById(`${fileId}_bar`).style.width = '100%';
+                    document.getElementById(`${fileId}_bar`).style.background = '#4caf50';
+                    
+                    setTimeout(() => { qItem.remove(); activeUploads--; if(activeUploads===0) uploadManager.style.display='none'; }, 2500);
+                    
+                    const placeholder = document.getElementById(`ph_${fileId}`);
+                    if (placeholder) {
+                        if (result.success) {
+                            const mbSize = (file.size / 1024 / 1024).toFixed(2);
+                            let html = `<div contenteditable="false" class="file-card">
+                                <div class="file-card-name">📄 ${file.name}</div>
+                                <div class="file-card-size">${mbSize} MB</div>
+                                <a href="${result.url}" target="_blank" class="file-card-btn">Download File</a>
+                            </div>&nbsp;`;
+                            
+                            if (file.type.startsWith('image/')) {
+                                html = `<br><a href="${result.url}" target="_blank"><img src="${result.url}" style="max-height: 250px; border-radius: 8px; margin: 5px; border: 1px solid #444; box-shadow: 0 4px 10px rgba(0,0,0,0.5);"></a><br>`;
+                            }
+                            placeholder.outerHTML = html;
+                        } else {
+                            placeholder.innerText = `[Upload Failed: ${result.error}]`;
+                            placeholder.style.color = "red";
+                            placeholder.style.borderColor = "red";
+                        }
                         triggerSync();
                     }
                 } catch (e) {
-                    const span = document.getElementById(tempId);
-                    if (span) { span.innerText = `[Network Error]`; span.style.color = 'red'; triggerSync(); }
+                    clearInterval(pInt);
+                    document.getElementById(`${fileId}_pct`).innerText = 'Error';
+                    document.getElementById(`${fileId}_bar`).style.background = '#f44336';
+                    setTimeout(() => { qItem.remove(); activeUploads--; if(activeUploads===0) uploadManager.style.display='none'; }, 3000);
+                    
+                    const placeholder = document.getElementById(`ph_${fileId}`);
+                    if (placeholder) { placeholder.innerText = `[Network Error]`; placeholder.style.color = "red"; placeholder.style.borderColor = "red"; triggerSync(); }
                 }
             };
             reader.readAsDataURL(file);
