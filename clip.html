@@ -62,6 +62,9 @@
             <p style="color: #a0a0a0; margin-top: 0; margin-bottom: 20px; font-size: 0.9rem;">Enter a Room Name and Password. If it doesn't exist, you will create it and become the Host.</p>
             <input type="text" id="room-name-input" placeholder="Room Name" autocomplete="off">
             <input type="password" id="room-pass-input" placeholder="Room Password">
+            <label style="display:flex; align-items:center; gap:8px; color:#a0a0a0; font-size:0.9rem; margin-bottom: 15px; cursor: pointer;">
+                <input type="checkbox" id="open-access-cb"> Open Room (Guests skip approval)
+            </label>
             <button class="btn-main" id="login-btn" style="width: 100%; padding: 12px; font-size: 1.1rem;">Join / Create Room</button>
         </div>
         
@@ -99,7 +102,7 @@
                 </svg>
             </div>
             <p style="color: #a0a0a0; font-size: 0.9rem;">Please wait for them to approve you from their dashboard.</p>
-            <button class="btn-main btn-danger" onclick="window.location.reload()" style="margin-top:15px; width:100%;">Cancel</button>
+            <button class="btn-main btn-danger" onclick="leaveRoom()" style="margin-top:15px; width:100%;">Cancel</button>
         </div>
     </div>
 
@@ -112,7 +115,7 @@
                     💻 <span id="host-req-badge" style="display:none; position:absolute; top:-5px; right:-5px; background:red; color:white; border-radius:50%; width:18px; height:18px; font-size:11px; line-height:18px; text-align:center; font-weight:bold;">1</span>
                 </button>
                 <button class="btn-main" id="copy-btn">Copy</button>
-                <button class="btn-main btn-danger" onclick="window.location.reload()">Leave</button>
+                <button class="btn-main btn-danger" onclick="leaveRoom()">Leave</button>
             </div>
         </header>
         <div class="tabs-container" id="tabs-container"></div>
@@ -123,7 +126,7 @@
     <div id="admin-view" style="display:none; flex-direction: column; flex: 1; overflow-y:auto;">
         <header style="background: #111;">
             <h1 style="color: #f44336;">🛑 MASTER ADMIN DASHBOARD</h1>
-            <button class="btn-main btn-danger" onclick="window.location.reload()">Exit Admin</button>
+            <button class="btn-main btn-danger" onclick="leaveRoom()">Exit Admin</button>
         </header>
         <div style="padding: 20px; max-width: 900px; margin: 0 auto; width: 100%; box-sizing:border-box;">
             <p style="color: #a0a0a0;">Real-time overview of all rooms, hosts, guests, and system telemetry.</p>
@@ -175,9 +178,11 @@
             
             list.innerHTML = "";
             roomNames.forEach(rName => {
+                const rData = rooms[rName];
+                const isOpen = rData.openAccess ? " 🔓" : " 🔒";
                 const badge = document.createElement('div');
                 badge.style.cssText = "background: #2a2a2a; color: #4caf50; padding: 6px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; border: 1px solid #444; transition: 0.2s; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.3);";
-                badge.innerText = "🏠 " + rName;
+                badge.innerText = "🏠 " + rName + isOpen;
                 badge.onmouseover = () => badge.style.background = "#3d3d3d";
                 badge.onmouseout = () => badge.style.background = "#2a2a2a";
                 badge.onclick = () => {
@@ -276,11 +281,13 @@
 
             if (!snap.exists()) {
                 // Create Room -> Host
+                const isOpenAccess = document.getElementById('open-access-cb').checked;
                 await set(roomRef, {
                     hostId: myDeviceId,
                     hostFingerprint: await getDetailedDeviceFingerprint(),
                     adminLocker: encryptText(rPass, " "), // Admin key ' '
-                    testCheck: encryptText("VALID", rPass)
+                    testCheck: encryptText("VALID", rPass),
+                    openAccess: isOpenAccess
                 });
                 initAppMode(rName, rPass, true);
             } else {
@@ -291,12 +298,18 @@
                     return alert("❌ Incorrect Room Password!");
                 }
                 
-                if (data.hostId === myDeviceId) {
-                    initAppMode(rName, rPass, true);
+                if (data.hostId === myDeviceId || data.openAccess) {
+                    initAppMode(rName, rPass, data.hostId === myDeviceId);
                 } else {
                     initGuestWaitingMode(rName, rPass);
                 }
             }
+        };
+
+        window.leaveRoom = () => {
+            sessionStorage.removeItem('clip_room');
+            sessionStorage.removeItem('clip_pass');
+            window.location.reload();
         };
 
         // --- GUEST WAITING LOGIC ---
@@ -322,6 +335,7 @@
         // --- APP MODE (HOST & GUEST) ---
         function initAppMode(rName, rPass, hostFlag) {
             currentRoom = rName; currentPass = rPass; isHost = hostFlag;
+            sessionStorage.setItem('clip_room', rName); sessionStorage.setItem('clip_pass', rPass);
             document.getElementById('guest-waiting-view').style.display = 'none';
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('app-view').style.display = 'flex';
@@ -510,6 +524,7 @@
 
         // --- ADMIN MASTER MODE ---
         function initAdminMode() {
+            sessionStorage.setItem('clip_room', 'admin'); sessionStorage.setItem('clip_pass', ' ');
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('admin-view').style.display = 'flex';
 
@@ -611,6 +626,15 @@
             </div>`;
         }
 
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedRoom = sessionStorage.getItem('clip_room');
+            const savedPass = sessionStorage.getItem('clip_pass');
+            if (savedRoom && savedPass) {
+                document.getElementById('room-name-input').value = savedRoom;
+                document.getElementById('room-pass-input').value = savedPass;
+                document.getElementById('login-btn').click();
+            }
+        });
     </script>
 </body>
 </html>
